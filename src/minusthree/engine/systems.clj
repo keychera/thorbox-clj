@@ -5,7 +5,8 @@
    [minusthree.engine.loading :as loading]
    [minusthree.engine.time :as time]
    [minusthree.engine.transform3d :as t3d]
-   [minusthree.gl.texture :as texture]))
+   [minusthree.gl.texture :as texture]
+   [minusthree.engine.thorbox.thorbox :as thorbox]))
 
 (def all
   [time/system
@@ -13,4 +14,6 @@
    texture/system
    t3d/system
    camera/system
-   input/system])
+   input/system
+
+   thorbox/system])

@@ -1,13 +1,17 @@
 (ns minusthree.engine.engine
   (:require
    [clojure.spec.alpha :as s]
+   [minusthree.engine.ffm.arena :as arena]
+   [minusthree.engine.input :as input]
    [minusthree.engine.loading :as loading]
    [minusthree.engine.rendering :as rendering]
    [minusthree.engine.systems :as systems]
+   [minusthree.engine.thorbox.thorbox :as thorbox]
    [minusthree.engine.time :as time]
    [minusthree.engine.world :as world]
-   [odoyle.rules :as o]
-   [minusthree.engine.input :as input]))
+   [odoyle.rules :as o])
+  (:import
+   [java.lang.foreign Arena]))
 
 (s/def ::init-game (s/keys :req [::world/this ::time/total]))
 
@@ -29,8 +33,8 @@
   ::do-we-refresh? ;; by calling this
   fn?
   ;; of one arity, accepting the game state, returning bool
-  ;; refresh is dev time niceties to recall fn post-refresh without destroy, and rebuild arena
-  ;; return true to trigger post-refresh
+  ;; refresh is dev time niceties to recall fn after-refresh without destroy, and rebuild arena
+  ;; return true to trigger after-refresh
   )
 
 (s/def ;; the game will loop and
@@ -55,10 +59,10 @@
 
 ;; TODO design, currently we don't allow anything to leak 
 ;; outside of the game loop except via exception
-;; in devtime, exception will be catch by minusthree.-dev.start
-;; and it will be presented by viscous/inspect
+;; devtime, that will be catch by minusthree.-dev.start
+;; and exception will be presented by viscous/inspect
 
-(declare init post-refresh tick pre-refresh destroy)
+(declare init after-refresh tick before-refresh clean-up)
 
 (defn game-loop
   [{::keys [we-begin-the-game
@@ -70,30 +74,33 @@
   (try
     (loop [game (we-begin-the-game) first-init? true]
       (let [[loop-state game']
-            (loop [game' (-> game
-                             (cond-> first-init? (init))
-                             (post-refresh))]
-              (cond
-                (do-we-stop? game')    [::stopping   (-> game' pre-refresh destroy)]
-                (do-we-refresh? game') [::refreshing (-> game' pre-refresh)]
-                :else (let [updated-game (things-from-out-there game')]
-                        (recur (tick updated-game)))))]
+            (with-open [game-arena (Arena/ofConfined)]
+              (loop [game' (-> game
+                               (assoc ::arena/game-arena game-arena)
+                               (cond-> first-init? (init))
+                               (after-refresh))]
+                (cond
+                  (do-we-stop? game')    [::stopping   (-> game' before-refresh)]
+                  (do-we-refresh? game') [::refreshing (-> game' before-refresh)]
+                  :else (let [updated-game (things-from-out-there game')]
+                          (recur (tick updated-game))))))]
         (condp = loop-state
           ::refreshing (recur game' false)
           ::stopping   ::ending)))
     (finally
+      (clean-up)
       (the-game-ends))))
 
 (defn init [{:keys [::world/this] :as game}]
-  (->> (or this (world/init-world game #'systems/all))
+  (->> (or this (world/init-world game systems/all))
        (loading/init-channel)
        (s/assert ::init-game)))
 
-(defn post-refresh [new-game]
+(defn after-refresh [new-game]
   (->> new-game
        (rendering/init)
        (input/init)
-       (world/post-world)))
+       (world/after-refresh)))
 
 (defn tick [game]
   (-> game
@@ -102,9 +109,10 @@
       (input/input-zone)
       (rendering/rendering-zone)))
 
-(defn pre-refresh [old-game]
+(defn before-refresh [old-game]
   (rendering/destroy old-game)
+  (world/before-refresh old-game)
   old-game)
 
-(defn destroy [game]
-  (-> game))
+(defn clean-up []
+  (thorbox/clean-up))
