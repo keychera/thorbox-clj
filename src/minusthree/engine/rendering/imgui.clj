@@ -1,13 +1,9 @@
 (ns minusthree.engine.rendering.imgui
   (:require
-   [minusthree.engine.camera :as camera]
    [minusthree.engine.rendering.fps-panel :as fps-panel])
   (:import
    [imgui ImGui]
-   [imgui.extension.imguizmo ImGuizmo]
-   [imgui.extension.imguizmo ImGuizmo]
-   [imgui.flag ImGuiConfigFlags ImGuiWindowFlags]
-   [imgui.flag ImGuiConfigFlags ImGuiWindowFlags]
+   [imgui.flag ImGuiConfigFlags]
    [imgui.gl3 ImGuiImplGl3]
    [imgui.glfw ImGuiImplGlfw]))
 
@@ -33,39 +29,11 @@
            ::imGuiglfw imGuiGlfw
            ::imGuiGl3 imGuiGl3)))
 
-(defn imGuizmoPanel [view* project* cam-distance w h]
-  (ImGuizmo/beginFrame)
-
-  (ImGui/setNextWindowPos 0.0 0.0)
-  (ImGui/setNextWindowSize (float w) (float h))
-  (when (ImGui/begin "imguizmo"
-                     (bit-or ImGuiWindowFlags/NoTitleBar
-                             ImGuiWindowFlags/NoMove
-                             ImGuiWindowFlags/NoBringToFrontOnFocus))
-    (let [manip-x (+ w -150.0)
-          manip-y 16.0]
-      (ImGuizmo/setOrthographic false)
-      (ImGuizmo/enable true)
-      (ImGuizmo/setDrawList)
-      (ImGuizmo/setRect 0.0 0.0 w h)
-      (ImGuizmo/drawGrid view* project* identity-mat 100)
-      (ImGuizmo/setID 0)
-      (ImGuizmo/viewManipulate view* cam-distance manip-x manip-y 128.0 128.0 0x70707070))
-
-    :-)
-
-  (ImGui/end))
-
 (defn frame [{::keys [imGuiGl3 imGuiglfw]
-              :keys  [config]
-              :as game}]
+              :keys  [config]}]
   (.newFrame imGuiglfw)
   (.newFrame imGuiGl3)
   (ImGui/newFrame)
-  (let [{:keys [view* project* distance]} (camera/get-active-cam game)
-        {:keys [w h]} (:window-conf config)]
-    (when (and view* project* distance)
-      (imGuizmoPanel view* project* distance w h)))
   (let [{:keys [title text]} (:imgui config)]
     (fps-panel/render! title text))
   (ImGui/render)
