@@ -7,5 +7,5 @@
 
 # devtime files
 .nrepl-port
-config.edn
+/config.edn
 imgui.ini
