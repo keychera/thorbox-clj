@@ -1,0 +1,16 @@
+(ns minusthree.engine.systems
+  (:require
+   [minusthree.engine.camera :as camera]
+   [minusthree.engine.input :as input]
+   [minusthree.engine.loading :as loading]
+   [minusthree.engine.time :as time]
+   [minusthree.engine.transform3d :as t3d]
+   [minusthree.gl.texture :as texture]))
+
+(def all
+  [time/system
+   loading/system
+   texture/system
+   t3d/system
+   camera/system
+   input/system])

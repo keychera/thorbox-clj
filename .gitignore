@@ -1,0 +1,11 @@
+# clj ignore
+.calva
+.clj-kondo/*
+!.clj-kondo/config.edn
+.cpcache
+.lsp
+
+# devtime files
+.nrepl-port
+config.edn
+imgui.ini
