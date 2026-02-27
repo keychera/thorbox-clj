@@ -1,12 +1,12 @@
 (ns minusthree.platform.jvm.sdl3
   (:require
    [minusthree.engine.engine :as engine]
-   [minusthree.engine.time :as time])
+   [minusthree.engine.time :as time]
+   [minusthree.platform.jvm.sdl3-events :as sdl3-input])
   (:import
    [org.lwjgl.opengl GL]
    [org.lwjgl.sdl
     SDLError
-    SDLEvents
     SDLInit
     SDLTimer
     SDLVideo
@@ -51,7 +51,7 @@
     (throw-sdl-error "SDLInit/SDL_Init error!"))
   (let [gl-context (create-gl-context sdl-window)
         stop-flag* (or stop-flag* (atom false))
-        event      (SDL_Event/create)]
+        event-buf  (SDL_Event/create)]
     (letfn [(we-begin-the-game []
               (SDLVideo/SDL_ShowWindow sdl-window)
               {::time/total   0.0
@@ -59,8 +59,8 @@
                :sdl-window    sdl-window
                :refresh-flag* refresh-flag*})
 
-            (do-we-stop? [_game]
-              (and (some? stop-flag*) @stop-flag*))
+            (do-we-stop? [{::sdl3-input/keys [stop?]}]
+              (or stop? (and (some? stop-flag*) @stop-flag*)))
 
             (do-we-refresh? [_game]
               (let [refresh? (some-> refresh-flag* deref)]
@@ -68,14 +68,12 @@
                 refresh?))
 
             (things-from-out-there [game]
-              (while (SDLEvents/SDL_PollEvent event)
-                (when (= (.type event) SDLEvents/SDL_EVENT_QUIT)
-                  (reset! stop-flag* true)))
               (let [total (SDLTimer/SDL_GetTicks)
                     delta (- total (::time/total game))
-                    game  (time/update-time game total delta)]
+                    game  (time/update-time game total delta)
+                    game' (sdl3-input/poll-events game event-buf)]
                 (SDLVideo/SDL_GL_SwapWindow sdl-window)
-                game))
+                game'))
 
             (the-game-ends []
               (println "the game ends")
@@ -83,8 +81,8 @@
               (SDLVideo/SDL_DestroyWindow sdl-window)
               (SDLInit/SDL_Quit))]
       (engine/game-loop
-       #::engine{:we-begin-the-game we-begin-the-game
-                 :do-we-stop? do-we-stop?
-                 :do-we-refresh? do-we-refresh?
+       #::engine{:we-begin-the-game     we-begin-the-game
+                 :do-we-stop?           do-we-stop?
+                 :do-we-refresh?        do-we-refresh?
                  :things-from-out-there things-from-out-there
-                 :the-game-ends the-game-ends}))))
+                 :the-game-ends         the-game-ends}))))
