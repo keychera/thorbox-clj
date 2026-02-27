@@ -57,6 +57,7 @@
 
 (comment
   (s/def ::move-direction #{:up :down :left :right})
+  (s/def ::move-state #{::run ::walk})
 
   (def anewrules
     (o/ruleset
@@ -69,8 +70,9 @@
       [:what
        [::input-global ::move-direction direction]
        [::horse ::t2d/position position {:then false}]
+       [::horse ::t2d/speed speed]
        :then
-       (let [magnitude 10
+       (let [magnitude speed
              move-value
              (case direction
                :right (v/vec2 magnitude 0.0)
@@ -79,15 +81,37 @@
                :down  (v/vec2 0.0 magnitude))]
          (s-> session
               (o/retract ::input-global ::move-direction)
-              (o/insert ::horse ::t2d/position (v/add move-value position))))]}))
+              (o/insert ::horse ::t2d/position (v/add move-value position))))]
+      
+      ::horse-move-state
+      [:what
+       [::input-global ::move-state move-state]
+       [::horse ::t2d/speed-stat spd-stat]
+       :then
+       (let [speed-stat spd-stat
+             move-speed
+             (case move-state 
+               ::run speed-stat
+               ::walk (/ speed-stat 2.0))]
+         (s-> session
+              (o/retract ::input-global ::move-state)
+              (o/insert ::horse ::t2d/speed move-speed)
+              )
+         )
+      ]}))
+    
 
   (-> (::world/this (world/init-world {} [{::world/rules anewrules}]))
       (o/insert ::horse {::t2d/position (v/vec2 1.0 0.0)})
       (o/insert ::horse {::t2d/scale (v/vec2 1.0 0.0)})
+      (o/insert ::horse {::t2d/speed-stat 10.0})
       (o/insert ::input-global {::move-direction :right})
       (o/fire-rules)
+      (o/insert ::input-global {::move-state ::walk})
       (o/insert ::input-global {::move-direction :right})
       (o/fire-rules)
       (o/query-all ::horse-render-data))
 
   :-)
+  
+  
