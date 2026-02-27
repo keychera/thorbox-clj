@@ -12,6 +12,7 @@
    [minusthree.gl.gl-magic :as gl-magic]
    [minusthree.gl.shader :as shader]
    [minusthree.gl.texture :as texture]
+   [minusthree.stage.debug-ui :as debug-ui]
    [odoyle.rules :as o])
   (:import
    [java.lang.foreign Arena MemoryLayout]
@@ -25,6 +26,7 @@
 (s/def ::tvg-arena ::arena/arena)
 (s/def ::buffer|| ::memory/segment)
 (s/def ::canvas|| ::memory/segment)
+(s/def ::text|| ::memory/segment)
 
 (s/def ::texture some?)
 (s/def ::width number?)
@@ -80,12 +82,14 @@
                         ::height height)]
     (println "create thorbox context")
     (tvg/tvg_font_load (.allocateFrom tvg-arena (str (io/file (io/resource "public/fonts/CardboardCrown.ttf")))))
-    (stuff-to-draw-to tvg-arena canvas||)
-    (o/insert new-world
-              ::tvg {::tvg-arena tvg-arena
-                     ::buffer|| buffer||
-                     ::canvas|| canvas||
-                     ::render-data gl-data})))
+
+    (let [drawn-canvas (stuff-to-draw-to tvg-arena canvas||)]
+      (o/insert new-world
+                ::tvg (merge
+                       drawn-canvas
+                       {::tvg-arena tvg-arena
+                        ::buffer|| buffer||
+                        ::render-data gl-data})))))
 
 (defn stuff-to-draw-to [arena canvas||]
   (let [rect||  (doto (tvg/tvg_shape_new)
@@ -116,10 +120,11 @@
                    (tvg/tvg_text_set_text (.allocateFrom arena "hello thor from dofida!"))
                    (tvg/tvg_text_set_color (ub 13) (ub 10) (ub 10))
                    (tvg/tvg_paint_translate 150 150))]
-    (doto canvas||
-      (tvg/tvg_canvas_add scene||)
-      (tvg/tvg_canvas_add text||)
-      (tvg/tvg_canvas_add path||))))
+    {::canvas|| (doto canvas||
+                  (tvg/tvg_canvas_add scene||)
+                  (tvg/tvg_canvas_add text||)
+                  (tvg/tvg_canvas_add path||))
+     ::text|| text||}))
 
 (def rules
   (o/ruleset
@@ -128,6 +133,7 @@
      [::tvg ::tvg-arena tvg-arena]
      [::tvg ::buffer|| buffer||]
      [::tvg ::canvas|| canvas||]
+     [::tvg ::text|| text||]
      [::tvg ::render-data render-data]]}))
 
 ;; I haven't been able to use thorvg glcanvas yet
@@ -144,11 +150,17 @@
   (GL45/glDrawArrays GL45/GL_TRIANGLES 0 6))
 
 (defn render [game]
-  (let [{:keys [canvas|| buffer|| render-data]}
-        (utils/query-one (::world/this game) ::thorvg-canvas)]
+  (let [{:keys [tvg-arena canvas|| text|| buffer|| render-data]}
+        (utils/query-one (::world/this game) ::thorvg-canvas)
+        
+        {:keys [fps-value position]}
+        (utils/query-one (::world/this game) ::debug-ui/fps-panel)]
     #_{:clj-kondo/ignore [:inline-def]}
     (def debug-var (o/query-all (::world/this game) ::thorvg-canvas))
     (when canvas||
+      (doto text||
+        (tvg/tvg_text_set_text (.allocateFrom tvg-arena (str fps-value)))
+        (tvg/tvg_paint_translate (.x position) (.y position)))
       (doto canvas||
         (tvg/tvg_canvas_update)
         (tvg/tvg_canvas_draw #_clear false)
