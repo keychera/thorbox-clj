@@ -34,6 +34,7 @@
          sdl-window   (SDLVideo/SDL_CreateWindow title width height window-flags)]
      (when (= sdl-window 0) (throw-sdl-error "SDLVideo/SDL_CreateWindow error!"))
      (SDLVideo/SDL_GL_SetSwapInterval 1) ;; enable vsync
+     (SDLVideo/SDL_SetWindowAlwaysOnTop sdl-window true)
      (SDLVideo/SDL_SetWindowPosition sdl-window SDLVideo/SDL_WINDOWPOS_CENTERED SDLVideo/SDL_WINDOWPOS_CENTERED)
      sdl-window)))
 
