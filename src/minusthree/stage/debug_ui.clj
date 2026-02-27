@@ -2,18 +2,11 @@
   (:require
    [clojure.spec.alpha :as s]
    [fastmath.vector :as v]
-   [minusthree.engine.macros :refer [insert! s->]]
+   [minusthree.engine.macros :refer [insert!]]
    [minusthree.engine.time :as time]
    [minusthree.engine.transform2d :as t2d]
-   [minusthree.engine.utils :as utils]
    [minusthree.engine.world :as world]
    [odoyle.rules :as o]))
-
-;; public
-
-(defn toggle-fps-panel [world]
-  (let [render? (utils/query-one world ::fps-panel)]
-    (o/insert world ::fps-counter ::render? (not render?))))
 
 ;; internal rules
 
@@ -53,41 +46,3 @@
 (def system
   {::world/after-refresh #'after-refresh
    ::world/rules #'rules})
-
-
-(comment
-  (s/def ::move-direction #{:up :down :left :right})
-
-  (def anewrules
-    (o/ruleset
-     {::horse-render-data
-      [:what
-       [::horse ::t2d/position position]
-       [::horse ::t2d/scale scale]]
-
-      ::horse-movement
-      [:what
-       [::input-global ::move-direction direction]
-       [::horse ::t2d/position position {:then false}]
-       :then
-       (let [magnitude 10
-             move-value
-             (case direction
-               :right (v/vec2 magnitude 0.0)
-               :left  (v/vec2 (- magnitude) 0.0)
-               :up    (v/vec2 0.0 (- magnitude))
-               :down  (v/vec2 0.0 magnitude))]
-         (s-> session
-              (o/retract ::input-global ::move-direction)
-              (o/insert ::horse ::t2d/position (v/add move-value position))))]}))
-
-  (-> (::world/this (world/init-world {} [{::world/rules anewrules}]))
-      (o/insert ::horse {::t2d/position (v/vec2 1.0 0.0)})
-      (o/insert ::horse {::t2d/scale (v/vec2 1.0 0.0)})
-      (o/insert ::input-global {::move-direction :right})
-      (o/fire-rules)
-      (o/insert ::input-global {::move-direction :right})
-      (o/fire-rules)
-      (o/query-all ::horse-render-data))
-
-  :-)

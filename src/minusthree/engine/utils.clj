@@ -100,3 +100,7 @@
 
 (defn query-one [odoyle-session rule-name]
   (first (o/query-all odoyle-session rule-name)))
+
+;; https://stackoverflow.com/a/69199852/8812880
+(defmacro defspec [k spec-form]
+  `(s/def-impl ~k (quote ~spec-form) ~spec-form))

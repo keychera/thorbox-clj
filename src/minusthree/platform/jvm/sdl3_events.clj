@@ -1,6 +1,7 @@
 (ns minusthree.platform.jvm.sdl3-events
   (:require
-   [clojure.spec.alpha :as s])
+   [clojure.spec.alpha :as s]
+   [minusthree.platform.jvm.sdl3-inputs :as sdl3-inputs])
   (:import
    [org.lwjgl.sdl SDLEvents]))
 
@@ -19,6 +20,13 @@
 (defn event-wiring [game event-buf]
   (condp event= event-buf
 
-    SDLEvents/SDL_EVENT_QUIT (assoc game ::stop? true)
+    SDLEvents/SDL_EVENT_QUIT
+    (assoc game ::stop? true)
+
+    SDLEvents/SDL_EVENT_KEY_DOWN 
+    (sdl3-inputs/process-input game ::sdl3-inputs/keydown)
+
+    SDLEvents/SDL_EVENT_KEY_UP
+    (sdl3-inputs/process-input game ::sdl3-inputs/keyup)
 
     #_else game))

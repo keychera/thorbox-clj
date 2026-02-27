@@ -164,9 +164,10 @@
     #_{:clj-kondo/ignore [:inline-def]}
     (def debug-var (o/query-all (::world/this game) ::thorvg-canvas))
     (when canvas||
-      (doto text||
-        (tvg/tvg_text_set_text (.allocateFrom tvg-arena (str fps-value)))
-        (tvg/tvg_paint_translate (.x position) (.y position)))
+      (when fps-value
+        (doto text||
+          (tvg/tvg_text_set_text (.allocateFrom tvg-arena (str fps-value)))
+          (tvg/tvg_paint_translate (.x position) (.y position))))
       (doto canvas||
         (tvg/tvg_canvas_update)
         (tvg/tvg_canvas_draw #_clear false)
