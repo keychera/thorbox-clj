@@ -1,6 +1,5 @@
 (ns minusthree.engine.systems
   (:require
-   [minusthree.engine.camera :as camera]
    [minusthree.engine.input :as input]
    [minusthree.engine.loading :as loading]
    [minusthree.engine.time :as time]
@@ -13,7 +12,6 @@
    loading/system
    texture/system
    t3d/system
-   camera/system
    input/system
 
    thorbox/system])

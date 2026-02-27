@@ -1,8 +1,6 @@
 (ns minusthree.engine.input
   (:require
    [clojure.spec.alpha :as s]
-   [minusthree.engine.camera :as camera]
-   [minusthree.engine.macros :refer [s->]]
    [minusthree.engine.world :as world]
    [minusthree.platform.jvm.input.scroll :as scroll]
    [odoyle.rules :as o]))
@@ -27,16 +25,7 @@
 
 (def rules
   (o/ruleset
-   {::zoom
-    [:what
-     [::global ::zoom-change zoom-change]
-     [::camera/global ::camera/view* view* {:then false}]
-     [::camera/global ::camera/distance cam-distance {:then false}]
-     :when (not (zero? zoom-change))
-     :then
-     (s-> session
-          (o/insert ::camera/global
-                    {::camera/distance (+ cam-distance (* zoom-change -1))}))]}))
+   {}))
 
 (def system
   {::world/rules #'rules})
