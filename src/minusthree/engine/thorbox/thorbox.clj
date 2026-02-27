@@ -20,8 +20,11 @@
    [thorvg tvg]))
 
 (defonce _loadlib
-  (do (sharedlibs/load-libs "libthorvg-1")
-      (sharedlibs/load-libs "box2dd")))
+  (try
+    (sharedlibs/load-libs "libthorvg-1")
+    (sharedlibs/load-libs "box2dd")
+    (catch Throwable err
+      (println "loading lib err" (:cause (Throwable->map err))))))
 
 (s/def ::tvg-arena ::arena/arena)
 (s/def ::buffer|| ::memory/segment)
@@ -67,29 +70,33 @@
 
 (defn after-refresh
   [new-world {config :config}]
-  (tvg/tvg_engine_init 4)
-  (let [tvg-arena (Arena/ofAuto)
-        window   (-> config :window-conf)
-        width    (or (:w window) 400)
-        height   (or (:h window) 400)
-        buffer|| (.allocate tvg-arena (MemoryLayout/sequenceLayout (* width height) tvg/C_INT))
-        canvas|| (doto (tvg/tvg_swcanvas_create (tvg/TVG_ENGINE_OPTION_DEFAULT))
-                   (tvg/tvg_swcanvas_set_target buffer|| width width height (tvg/TVG_COLORSPACE_ABGR8888S)))
-        texture  (texture/create-texture (.asByteBuffer buffer||) width height)
-        gl-data  (assoc (create-thor-gl)
-                        ::texture texture
-                        ::width width
-                        ::height height)]
-    (println "create thorbox context")
-    (tvg/tvg_font_load (.allocateFrom tvg-arena (str (io/file (io/resource "public/fonts/CardboardCrown.ttf")))))
+  (try
+    (tvg/tvg_engine_init 4)
+    (let [tvg-arena (Arena/ofAuto)
+          window   (-> config :window-conf)
+          width    (or (:w window) 400)
+          height   (or (:h window) 400)
+          buffer|| (.allocate tvg-arena (MemoryLayout/sequenceLayout (* width height) tvg/C_INT))
+          canvas|| (doto (tvg/tvg_swcanvas_create (tvg/TVG_ENGINE_OPTION_DEFAULT))
+                     (tvg/tvg_swcanvas_set_target buffer|| width width height (tvg/TVG_COLORSPACE_ABGR8888S)))
+          texture  (texture/create-texture (.asByteBuffer buffer||) width height)
+          gl-data  (assoc (create-thor-gl)
+                          ::texture texture
+                          ::width width
+                          ::height height)]
+      (println "create thorbox context")
+      (tvg/tvg_font_load (.allocateFrom tvg-arena (str (io/file (io/resource "public/fonts/CardboardCrown.ttf")))))
 
-    (let [drawn-canvas (stuff-to-draw-to tvg-arena canvas||)]
-      (o/insert new-world
-                ::tvg (merge
-                       drawn-canvas
-                       {::tvg-arena tvg-arena
-                        ::buffer|| buffer||
-                        ::render-data gl-data})))))
+      (let [drawn-canvas (stuff-to-draw-to tvg-arena canvas||)]
+        (o/insert new-world
+                  ::tvg (merge
+                         drawn-canvas
+                         {::tvg-arena tvg-arena
+                          ::buffer|| buffer||
+                          ::render-data gl-data}))))
+    (catch Throwable _err
+      (println "thorbox no-op init")
+      new-world)))
 
 (defn stuff-to-draw-to [arena canvas||]
   (let [rect||  (doto (tvg/tvg_shape_new)
@@ -152,7 +159,6 @@
 (defn render [game]
   (let [{:keys [tvg-arena canvas|| text|| buffer|| render-data]}
         (utils/query-one (::world/this game) ::thorvg-canvas)
-        
         {:keys [fps-value position]}
         (utils/query-one (::world/this game) ::debug-ui/fps-panel)]
     #_{:clj-kondo/ignore [:inline-def]}
@@ -169,7 +175,10 @@
   game)
 
 (defn clean-up []
-  (tvg/tvg_engine_term))
+  (try
+    (tvg/tvg_engine_term)
+    (catch Throwable _err
+      (println "thorbox no-op destroy"))))
 
 (defn before-refresh [old-world _old-game]
   (clean-up)
