@@ -1,6 +1,6 @@
 (ns minusthree.engine.rendering
-  (:require
-   [minusthree.engine.thorbox.thorbox :as thorbox])
+  #_(:require
+     [minusthree.engine.thorbox.thorbox :as thorbox])
   (:import
    [org.lwjgl.opengl GL45]))
 
@@ -20,7 +20,7 @@
     (GL45/glClear (bit-or GL45/GL_COLOR_BUFFER_BIT GL45/GL_DEPTH_BUFFER_BIT))
     (GL45/glViewport 0 0 w h)
 
-    (thorbox/render game))
+    #_(thorbox/render game))
   game)
 
 (defn destroy [game]
