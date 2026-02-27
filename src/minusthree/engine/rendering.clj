@@ -1,18 +1,15 @@
 (ns minusthree.engine.rendering
   (:require
-   [minusthree.engine.rendering.imgui :as imgui]
    [minusthree.engine.thorbox.thorbox :as thorbox])
   (:import
    [org.lwjgl.opengl GL45]))
 
 (defn init [game]
   (GL45/glEnable GL45/GL_BLEND)
-  (GL45/glEnable GL45/GL_BLEND)
   (GL45/glEnable GL45/GL_CULL_FACE)
   (GL45/glEnable GL45/GL_MULTISAMPLE)
   (GL45/glEnable GL45/GL_DEPTH_TEST)
-  (-> game
-      (imgui/init)))
+  game)
 
 (defn rendering-zone [game]
   (let [{:keys [config]} game
@@ -23,11 +20,8 @@
     (GL45/glClear (bit-or GL45/GL_COLOR_BUFFER_BIT GL45/GL_DEPTH_BUFFER_BIT))
     (GL45/glViewport 0 0 w h)
 
-    (thorbox/render game)
-
-    (imgui/frame game))
+    (thorbox/render game))
   game)
 
 (defn destroy [game]
-  (doto game
-    (imgui/destroy)))
+  game)
