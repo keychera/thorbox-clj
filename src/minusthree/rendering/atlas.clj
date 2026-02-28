@@ -32,17 +32,21 @@
 (def fbo-vs (raw-from-here "sprite.vert"))
 (def fbo-fs (raw-from-here "sprite.frag"))
 
-(defn atlas->uv-rect [atlas-w atlas-h {:keys [x y width height]}]
-  (let [u0 (/ x atlas-w)
+(defn atlas->uv-rect [{:keys [x y width height]}]
+  (let [atlas-w 1016 atlas-h 1016
+        u0 (/ x atlas-w)
         v0 (/ y atlas-h)
         u1 (/ (+ x width) atlas-w)
         v1 (/ (+ y height) atlas-h)]
     [u0 v0 u1 v1]))
 
 (def crop-arr
-  (float-array
-   (atlas->uv-rect 1016 1016
-                   {:height 60, :width 42, :x 891, :y 650, :name "foliagePack_001.png"})))
+  [(atlas->uv-rect
+    {:height 60, :width 42, :x 891, :y 650, :name "foliagePack_001.png"})
+   (atlas->uv-rect
+    {:height 45, :width 52, :y 958, :x 98, :name "foliagePack_019.png"})
+   (atlas->uv-rect
+    {:height 192, :width 151, :y 614, :x 0, :name "foliagePack_047.png"})])
 
 (defn create-atlas-gl []
   (let [program-info (cljgl/create-program-info-from-source fbo-vs fbo-fs)
@@ -52,7 +56,7 @@
                          {:point-attr :a_pos :use-shader program-info :count 3 :component-type GL45/GL_FLOAT}
                          {:buffer-data raw-data/plane3d-uvs :buffer-type GL45/GL_ARRAY_BUFFER}
                          {:point-attr :a_uv :use-shader program-info :count 2 :component-type GL45/GL_FLOAT}
-                         {:buffer-data crop-arr :buffer-type GL45/GL_ARRAY_BUFFER}
+                         {:buffer-data (float-array (flatten crop-arr)) :buffer-type GL45/GL_ARRAY_BUFFER}
                          {:point-attr :i_crop :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
                          {:vertex-attr-divisor :i_crop :use-shader program-info :divisor 1}
                          {:unbind-vao true}])
@@ -110,7 +114,7 @@
       (GL45/glBindTexture GL45/GL_TEXTURE_2D gl-texture)
 
       (cljgl/set-uniform program-info :u_tex 0)
-      (GL45/glDrawArrays GL45/GL_TRIANGLES 0 6))))
+      (GL45/glDrawArraysInstanced GL45/GL_TRIANGLES 0 6 (count crop-arr)))))
 
 (comment
   (require '[com.phronemophobic.viscous :as viscous])
