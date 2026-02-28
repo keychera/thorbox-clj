@@ -73,6 +73,7 @@
                     delta (- total (::time/total game))
                     game  (time/update-time game total delta)
                     game' (sdl3-input/poll-events game event-buf)]
+                (SDLVideo/SDL_SetWindowTitle sdl-window (str "frametime: " delta " ms"))
                 (SDLVideo/SDL_GL_SwapWindow sdl-window)
                 game'))
 
