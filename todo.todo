@@ -1,6 +1,11 @@
 horsing around:
-    ☐ gradient sky
-    ☐ texture atlas
-    ☐ button ui
+    ✔ gradient sky @done(26-03-01 01:47)
+    ✔ texture atlas @done(26-03-01 01:47)
+    ☐ instancing
+    ☐ parallaxing
+    ☐ camera-ing
+    ☐ carrot
     ☐ horse
+    ☐ scoring
     ☐ simple control A D
+    ☐ button ui
