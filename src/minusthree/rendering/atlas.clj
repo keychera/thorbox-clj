@@ -9,8 +9,8 @@
    [minusthree.engine.world :as world :refer [esse]]
    [minusthree.gl.cljgl :as cljgl]
    [minusthree.gl.gl-magic :as gl-magic]
-   [minusthree.gl.shader :as shader]
    [minusthree.gl.texture :as texture]
+   [minusthree.rendering.+render-data :as +render-data]
    [odoyle.rules :as o])
   (:import
    [org.lwjgl.opengl GL45]))
@@ -32,11 +32,6 @@
 (def fbo-vs (raw-from-here "sprite.vert"))
 (def fbo-fs (raw-from-here "sprite.frag"))
 
-(s/def ::vao ::gl-magic/vao)
-(s/def ::program-info ::shader/program-info)
-(s/def ::render-data
-  (s/keys :req [::program-info ::vao]))
-
 (defn create-atlas-gl []
   (let [program-info (cljgl/create-program-info-from-source fbo-vs fbo-fs)
         gl-summons     (gl-magic/cast-spell
@@ -47,12 +42,12 @@
                          {:point-attr :a_uv :use-shader program-info :count 2 :component-type GL45/GL_FLOAT}
                          {:unbind-vao true}])
         vao          (-> gl-summons ::gl-magic/data ::gl-magic/vao (get "atlas"))]
-    {::program-info program-info ::vao vao}))
+    {:program-info program-info :vao vao}))
 
 (defn init-fn [world _game]
   (-> world
       (esse ::foliage
-            {::render-data (create-atlas-gl)
+            {::+render-data/data (create-atlas-gl)
              ::texture/count 1
              ::texture/data {}})
       (esse ::foliage-atlas
@@ -72,7 +67,7 @@
     [:what
      [::foliage ::texture/data atlas-texture]
      [::foliage ::meta atlas-meta]
-     [::foliage ::render-data render-data]
+     [::foliage ::+render-data/data render-data]
      :when (seq atlas-texture)
      :then
      #_{:clj-kondo/ignore [:inline-def]}
@@ -85,14 +80,14 @@
 
 (defn render-world [world]
   (when-let [{:keys [atlas-texture render-data]} (utils/query-one world ::foliage-texture)]
-    (let [{::keys [program-info vao]} render-data
+    (let [{:keys [program-info vao]} render-data
           gl-texture (-> atlas-texture ::foliage-atlas :gl-texture)]
       (GL45/glUseProgram (:program program-info))
       (GL45/glBindVertexArray vao)
 
       (GL45/glActiveTexture GL45/GL_TEXTURE0)
       (GL45/glBindTexture GL45/GL_TEXTURE_2D gl-texture)
-      
+
       (cljgl/set-uniform program-info :u_tex 0)
       (GL45/glDrawArrays GL45/GL_TRIANGLES 0 6))))
 
