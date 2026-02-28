@@ -4,10 +4,10 @@
    [minusthree.engine.ffm.arena :as arena]
    [minusthree.engine.input :as input]
    [minusthree.engine.loading :as loading]
-   [minusthree.engine.rendering :as rendering]
    [minusthree.engine.systems :as systems]
    [minusthree.engine.time :as time]
    [minusthree.engine.world :as world]
+   [minusthree.rendering.+core :as rendering]
    [odoyle.rules :as o])
   (:import
    [java.lang.foreign Arena]))
