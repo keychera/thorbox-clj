@@ -16,15 +16,13 @@
   (-> (reduce
        (fn [{:keys [state] :as magician} chant]
          (match/match [chant]
-           [{:bind-vao _}] ;; entry: vao binding
+           [{:bind-vao vao-name}] ;; entry: vao binding
            (let [vao (GL45/glGenVertexArrays)]
              (GL45/glBindVertexArray vao)
-             (assoc-in magician [::data ::vao (:bind-vao chant)] vao))
+             (assoc-in magician [::data ::vao vao-name] vao))
 
-           [{:buffer-data _ :buffer-type _}] ;; entry: buffer binding
-           (let [buffer (GL45/glGenBuffers)
-                 buffer-type (:buffer-type chant)
-                 buffer-data (:buffer-data chant)]
+           [{:buffer-data buffer-data :buffer-type buffer-type}] ;; entry: buffer binding
+           (let [buffer (GL45/glGenBuffers)]
              (GL45/glBindBuffer buffer-type buffer)
              (GL45/glBufferData buffer-type buffer-data (or (:usage chant) GL45/GL_STATIC_DRAW))
              (cond-> magician
@@ -38,11 +36,11 @@
              magician)
 
            ;; entry: attrib pointing, some keywords follows gltf accessor keys 
-           [{:point-attr _ :count _ :component-type _ :use-shader _}]
+           [{:point-attr point-attr :count count :component-type component-type :use-shader use-shader}]
            (try
-             (s/assert ::shader/program-info (:use-shader chant))
-             (if-let [attr-loc (get-in (:use-shader chant) [:attr-locs (:point-attr chant) :attr-loc])]
-               (let [{:keys [count component-type stride offset] :or {stride 0 offset 0}} chant]
+             (s/assert ::shader/program-info use-shader)
+             (if-let [attr-loc (get-in use-shader [:attr-locs point-attr :attr-loc])]
+               (let [{:keys [stride offset] :or {stride 0 offset 0}} chant]
                  (condp = component-type
                    GL45/GL_UNSIGNED_SHORT (GL45/glVertexAttribIPointer attr-loc count component-type stride offset)
                    GL45/GL_UNSIGNED_INT   (GL45/glVertexAttribIPointer attr-loc count component-type stride offset)
@@ -54,19 +52,25 @@
                (println "[error] in point-attr" (:point-attr chant) ", cause:" (:cause (Throwable->map err)))
                (update-in magician [::data ::err] conj err)))
 
-           [{:bind-texture _ :image _ :for-esse _}] ;; entry: texture binding
-           (let [uri      (-> chant :image :uri)
-                 tex-name (:bind-texture chant)]
+           [{:vertex-attr-divisor point-attr :divisor divisor :use-shader use-shader}]
+           (if-let [attr-loc (get-in use-shader [:attr-locs point-attr :attr-loc])]
+             (do (GL45/glVertexAttribDivisor attr-loc divisor)
+                 magician)
+             (update-in magician [::data ::err] conj (str "[error] attr-loc not found for chant:" chant)))
+
+           ;; entry: texture binding
+           [{:bind-texture tex-name :image image :for-esse esse-id}]
+           (let [uri (:uri image)]
              (update magician ::facts conj
                      [tex-name ::texture/uri-to-load uri]
-                     [tex-name ::texture/for (:for-esse chant)]))
+                     [tex-name ::texture/for esse-id]))
 
            [{:unbind-vao _}]
            (do (GL45/glBindVertexArray 0)
                magician)
 
-           [{:insert-facts _}]
-           (let [facts (:insert-facts chant)]
+           [{:insert-facts facts}]
+           (do
              (println "gl-magic will insert" (count facts) "fact(s)")
              (update magician ::facts into facts))
 
