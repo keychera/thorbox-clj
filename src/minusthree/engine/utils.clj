@@ -1,7 +1,9 @@
 (ns minusthree.engine.utils
   (:require
    [clojure.java.io :as io]
+   [clojure.spec.alpha :as s]
    [clojure.string :as str]
+   [clojure.xml :as xml]
    [fastmath.matrix :as mat]
    [odoyle.rules :as o])
   (:import
@@ -67,6 +69,10 @@
         (throw (ex-info (str "get-image failed! reason: " (STBImage/stbi_failure_reason)) {})))
       {:image-data image :width (.get *w) :height (.get *h)})))
 
+(defn get-image-from-resource [resource-path]
+  (with-mem-free!? [buffer!? (resource->ByteBuffer!? resource-path)]
+    (stb-load-from-buffer buffer!?)))
+
 (defn get-image-from-public-resource [public-resource-path]
   (with-mem-free!? [buffer!? (resource->ByteBuffer!? (str "public/" public-resource-path))]
     (stb-load-from-buffer buffer!?)))
@@ -104,3 +110,7 @@
 ;; https://stackoverflow.com/a/69199852/8812880
 (defmacro defspec [k spec-form]
   `(s/def-impl ~k (quote ~spec-form) ~spec-form))
+
+(defn get-xml [path]
+  (with-open [rdr (io/input-stream (io/resource path))]
+    (xml/parse rdr)))
