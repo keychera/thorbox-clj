@@ -6,7 +6,6 @@
    [minusthree.engine.loading :as loading]
    [minusthree.engine.rendering :as rendering]
    [minusthree.engine.systems :as systems]
-   [minusthree.engine.thorbox.thorbox :as thorbox]
    [minusthree.engine.time :as time]
    [minusthree.engine.world :as world]
    [odoyle.rules :as o])
@@ -115,4 +114,4 @@
   old-game)
 
 (defn clean-up []
-  (thorbox/clean-up))
+  )

@@ -1,4 +1,6 @@
-# thorvg + box2d + lwjgl in clojure
+# ~~thorvg + box2d~~ + lwjgl in clojure
+
+thorvg and box2d disabled for now since I am sensing a problem brewing during distribution
 
 ## repl dev
 
