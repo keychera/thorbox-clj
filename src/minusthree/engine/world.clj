@@ -15,11 +15,13 @@
   (if (instance? clojure.lang.Var v) (deref v) v))
 
 (defn prepare-world [world game all-rules init-fns]
-  (let [world   (reduce (fn [w' {::keys [before-refresh]}]
-                          (cond-> w'
-                            before-refresh (before-refresh game)))
-                        world init-fns)
-        world'  (reduce o/add-rule (or world (o/->session)) all-rules)
+  (let [world   (if world
+                  (reduce (fn [w' {::keys [before-refresh]}]
+                            (cond-> w'
+                              before-refresh (before-refresh game)))
+                          world init-fns)
+                  (o/->session))
+        world'  (reduce o/add-rule world all-rules)
         world'' (reduce (fn [w' {::keys [init-fn]}]
                           (cond-> w'
                             init-fn (init-fn game)))

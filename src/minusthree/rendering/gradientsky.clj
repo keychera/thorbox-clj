@@ -2,7 +2,7 @@
   (:require
    [clojure.spec.alpha :as s]
    [minusthree.engine.raw-data :as raw-data]
-   [minusthree.engine.utils :refer [raw-from-here]]
+   [minusthree.engine.utils :as utils :refer [raw-from-here]]
    [minusthree.engine.world :as world]
    [minusthree.gl.cljgl :as cljgl]
    [minusthree.gl.gl-magic :as gl-magic]
@@ -35,6 +35,12 @@
   (let [sky-gl (create-sky-gl)]
     (o/insert world ::gradientsky ::render-data sky-gl)))
 
+(defn before-refresh [world _game]
+  (let [{:keys [render-data]} (utils/query-one world ::render-data)
+        {::keys [program-info vao]} render-data]
+    (GL45/glDeleteVertexArrays vao)
+    (GL45/glDeleteProgram (:program program-info))))
+
 (def rules
   (o/ruleset
    {::render-data
@@ -43,4 +49,5 @@
 
 (def system
   {::world/after-refresh #'after-refresh
-   ::world/rules #'rules})
+   ::world/rules #'rules
+   ::world/before-refresh #'before-refresh})
