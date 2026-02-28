@@ -8,7 +8,7 @@
 (s/def ::init-fn fn? #_(fn [world game] world))
 (s/def ::after-refresh fn? #_(fn [world game] world))
 (s/def ::before-refresh fn? #_(fn [world game] world))
-(s/def ::rules   ::o/rules)
+(s/def ::rules ::o/rules)
 
 ;; dev-only
 (defn resolve-var [v]
@@ -27,7 +27,8 @@
     world''))
 
 (defn init-world [game system-coll]
-  (let [systems   (into [] (map resolve-var) system-coll)
+  (let [coll      (into [] (mapcat (fn [sys] (if (vector? sys) sys [sys]))) system-coll)
+        systems   (into [] (map resolve-var) coll)
         all-rules (into [] (mapcat (comp resolve-var ::rules)) systems)
         init-fns  (into [] (map #(select-keys % [::init-fn ::after-refresh ::before-refresh])) systems)]
     (assoc (update game ::this prepare-world game all-rules init-fns)
