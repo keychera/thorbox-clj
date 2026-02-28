@@ -32,6 +32,18 @@
 (def fbo-vs (raw-from-here "sprite.vert"))
 (def fbo-fs (raw-from-here "sprite.frag"))
 
+(defn atlas->uv-rect [atlas-w atlas-h {:keys [x y width height]}]
+  (let [u0 (/ x atlas-w)
+        v0 (/ y atlas-h)
+        u1 (/ (+ x width) atlas-w)
+        v1 (/ (+ y height) atlas-h)]
+    [u0 v0 u1 v1]))
+
+(def crop-arr
+  (float-array
+   (atlas->uv-rect 1016 1016
+                   {:height 60, :width 42, :x 891, :y 650, :name "foliagePack_001.png"})))
+
 (defn create-atlas-gl []
   (let [program-info (cljgl/create-program-info-from-source fbo-vs fbo-fs)
         gl-summons     (gl-magic/cast-spell
@@ -40,9 +52,18 @@
                          {:point-attr :a_pos :use-shader program-info :count 3 :component-type GL45/GL_FLOAT}
                          {:buffer-data raw-data/plane3d-uvs :buffer-type GL45/GL_ARRAY_BUFFER}
                          {:point-attr :a_uv :use-shader program-info :count 2 :component-type GL45/GL_FLOAT}
+                         {:buffer-data crop-arr :buffer-type GL45/GL_ARRAY_BUFFER}
+                         {:point-attr :i_crop :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
+                         {:vertex-attr-divisor :i_crop :use-shader program-info :divisor 1}
                          {:unbind-vao true}])
         vao          (-> gl-summons ::gl-magic/data ::gl-magic/vao (get "atlas"))]
     {:program-info program-info :vao vao}))
+
+(s/def ::x int?)
+(s/def ::y int?)
+(s/def ::height int?)
+(s/def ::width int?)
+(s/def ::crop-data (s/keys :req-un [::x ::y ::height ::width]))
 
 (defn init-fn [world _game]
   (-> world
