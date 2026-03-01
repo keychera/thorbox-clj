@@ -18,7 +18,7 @@
   (doseq [inp allowed-key]
     (utils/defspec inp #{::keyup ::keydown}))
   (def default-facts
-    (into {} (map (fn [k] [k ::keydown])) allowed-key)))
+    (into {} (map (fn [k] [k ::keyup])) allowed-key)))
 
 (defn process-input [game press-state]
   (let [kb-state (SDLKeyboard/SDL_GetKeyboardState)
