@@ -1,5 +1,5 @@
 #version 450
-precision mediump float;
+precision highp float;
 in vec3 a_pos;
 in vec2 a_uv;
 in vec4 i_pos_scale;

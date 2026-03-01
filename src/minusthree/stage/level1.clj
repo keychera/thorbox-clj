@@ -41,15 +41,15 @@
    "foliagePack_leaves_010.png"])
 
 (defn after-refresh [world _game]
-  (let [base-speed -0.5]
+  (let [base-speed -1]
     (-> world
-        #_(esse ::ground-b
-                (atlas/foliage-instance
-                 {:tex-name "foliagePack_leaves_010.png"
-                  :scale (v/vec2 18.0 3.0)})
-                {::atlas/layer 1
-                 ::atlas/tint [0.8 0.7 0.5 0.9]
-                 ::offset-pos (v/vec2 0.0 -850.0)})
+        (esse ::ground-b
+              (atlas/foliage-instance
+               {:tex-name "foliagePack_050.png"
+                :scale (v/vec2 2.0 2.0)})
+              {::atlas/layer -3
+               ::atlas/tint [1.0 1.0 1.0 1.0]
+               ::offset-pos (v/vec2 0.0 0.0)})
         #_(esse ::grass-L
                 (atlas/foliage-instance
                  {:tex-name "foliagePack_leaves_002.png"
@@ -64,7 +64,7 @@
                 :starting-pos (v/vec2 2400.0 -150.0)
                 :layer -2
                 :tint [1.0 1.0 1.0 0.0]
-                :delay-time-fn (fn [] (/ (+ 200 (rand-int 200)) (abs base-speed)))
+                :delay-time-fn (fn [] (/ (+ 200 (rand-int 900)) (abs base-speed)))
                 :parallax-x-rate base-speed}
                ::acc-time 0})
         (esse ::ground-particle
@@ -74,7 +74,7 @@
                 :starting-pos (v/vec2 2400.0 -700.0)
                 :layer 1
                 :tint [1.0 1.0 1.0 0.6]
-                :delay-time-fn (fn [] (/ 2200 (abs base-speed)))
+                :delay-time-fn (fn [] (/ 2000 (abs base-speed)))
                 :parallax-x-rate base-speed}
                ::acc-time 0})
         (esse ::grass-particle
@@ -84,7 +84,7 @@
                 :starting-pos (v/vec2 2400.0 -900.0)
                 :layer 2
                 :tint [0.6 0.7 0.6 0.3]
-                :delay-time-fn (fn [] (/ 1100 (abs base-speed)))
+                :delay-time-fn (fn [] (/ 900 (abs base-speed)))
                 :parallax-x-rate base-speed}
                ::acc-time 0}))))
 

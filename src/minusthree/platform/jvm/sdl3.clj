@@ -28,7 +28,7 @@
    (SDLVideo/SDL_GL_SetAttribute SDLVideo/SDL_GL_DOUBLEBUFFER 1)
    (SDLVideo/SDL_GL_SetAttribute SDLVideo/SDL_GL_DEPTH_SIZE 24)
    (SDLVideo/SDL_GL_SetAttribute SDLVideo/SDL_GL_STENCIL_SIZE 0)
-   (let [window-flags (bit-or SDLVideo/SDL_WINDOW_OPENGL SDLVideo/SDL_WINDOW_RESIZABLE)
+   (let [window-flags SDLVideo/SDL_WINDOW_OPENGL
          width        (int w)
          height       (int h)
          sdl-window   (SDLVideo/SDL_CreateWindow title width height window-flags)]
