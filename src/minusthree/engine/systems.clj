@@ -6,7 +6,8 @@
    [minusthree.gl.texture :as texture]
    [minusthree.platform.jvm.sdl3-inputs :as sdl3-inputs]
    [minusthree.rendering.+core :as rendering]
-   [minusthree.stage.debug-ui :as debug-ui]))
+   [minusthree.stage.debug-ui :as debug-ui]
+   [minusthree.stage.level1 :as level1]))
 
 (def all
   [time/system
@@ -17,5 +18,7 @@
    input/system
 
    rendering/all
+
+   level1/system
 
    debug-ui/system])
