@@ -154,11 +154,12 @@
         scale-y (* (:height crop-data) (.y scale))]
     [(.x position) (.y position) scale-x scale-y]))
 
-(defn render-world [world]
+(defn render-world [world layer-filter]
   (when-let [{:keys [atlas-texture render-data]} (utils/query-one world ::foliage-texture)]
     (let [{:keys [program-info vao buffers]} render-data
           gl-texture    (-> atlas-texture ::foliage-atlas :gl-texture)
           foliages      (->> (o/query-all world ::foliage-instances)
+                             (filter layer-filter)
                              (sort-by :layer))
           pos-scale-arr (some->> (seq foliages)
                                  (into [] (map foliage-instance->pos-scale))

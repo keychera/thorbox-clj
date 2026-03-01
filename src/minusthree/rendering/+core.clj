@@ -31,8 +31,9 @@
     (GL45/glViewport 0 0 w h)
 
     (gradientsky/render-world world)
-    (atlas/render-world world)
+    (atlas/render-world world #(<= (:layer %) 0))
     (naive-gif/render-world world)
+    (atlas/render-world world #(> (:layer %) 0))
 
     game))
 
