@@ -1,7 +1,8 @@
 (ns equipment.lets
   (:require
    [clojure.string :as str]
-   [clojure.tools.build.api :as b]))
+   [clojure.tools.build.api :as b]
+   [clojure.java.io :as io]))
 
 (def game 'self.chera/horsing-around)
 (def version (format "0.2.%s" (b/git-count-revs nil)))
@@ -72,3 +73,37 @@
 
 (defn release [& _]
   (minusthree-uber {}))
+
+(defn jpackage [& _]
+  ;; jpackage makes an installer that is unintuitive atm
+  (let [home "target/output/jar"
+        jar  (first
+              (eduction
+               (filter #(str/ends-with? (.getName %) ".jar"))
+               (file-seq (io/file home))))
+        cmds ["jpackage"
+              "--input" home
+              "--name" "HorsingAround"
+              "--main-jar" (.getName jar)
+              "--description" "a game submission for Mini Jam 205: Horses"
+              "--java-options" "--enable-native-access=ALL-UNNAMED"]]
+    (println "running" cmds)
+    (b/process {:out :inherit :command-args cmds})))
+
+
+(defn packr [& _]
+  (b/delete {:path "target/output/packr"})
+  (let [home "target/output/jar"
+        jar  (first
+              (eduction
+               (filter #(str/ends-with? (.getName %) ".jar"))
+               (file-seq (io/file home))))
+        cmds ["java" "-jar" "packr-all-4.0.0.jar"
+              "--platform" "windows64"
+              "--jdk" "OpenJDK25U-jre_x64_windows_hotspot_25.0.2_10.zip"
+              "--executable" "HorsingAround"
+              "--classpath" (.getAbsolutePath jar)
+              "--mainclass" "minusthree.platform.jvm.jvm_game"
+              "--output" "target/output/packr"]]
+    (println "running" cmds)
+    (b/process {:out :inherit :command-args cmds})))

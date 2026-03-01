@@ -1,7 +1,7 @@
 (ns minusthree.platform.jvm.jvm-game
+  (:gen-class)
   (:require
-   [minusthree.platform.jvm.sdl3 :as sdl3])
-  (:gen-class))
+   [minusthree.platform.jvm.sdl3 :as sdl3]))
 
 (defn create-window [config]
   (sdl3/create-window config))

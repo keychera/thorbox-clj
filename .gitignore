@@ -13,3 +13,6 @@ imgui.ini
 
 # out
 target
+*.exe
+*.jar
+*.zip

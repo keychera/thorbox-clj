@@ -130,7 +130,7 @@
         (esse ::grass-particle-init
               (atlas/foliage-instance
                {:tex-name "foliagePack_leaves_002.png"
-                :scale (v/vec2 9.0 3.0)})
+                :scale (v/vec2 18.0 3.0)})
               {::atlas/layer 2
                ::atlas/tint [0.6 0.7 0.6 0.5]
                ::t2d/position (v/vec2 -900 -900.0)
@@ -140,7 +140,7 @@
         (esse ::grass-particle-init-2
               (atlas/foliage-instance
                {:tex-name "foliagePack_leaves_002.png"
-                :scale (v/vec2 9.0 3.0)})
+                :scale (v/vec2 18.0 3.0)})
               {::atlas/layer 2
                ::atlas/tint [0.6 0.7 0.6 0.5]
                ::t2d/position (v/vec2 0 -900.0)
@@ -150,7 +150,7 @@
         (esse ::grass-particle-init-3
               (atlas/foliage-instance
                {:tex-name "foliagePack_leaves_002.png"
-                :scale (v/vec2 9.0 3.0)})
+                :scale (v/vec2 18.0 3.0)})
               {::atlas/layer 2
                ::atlas/tint [0.6 0.7 0.6 0.5]
                ::t2d/position (v/vec2 900 -900.0)
@@ -160,7 +160,7 @@
         (esse ::grass-particle-init-4
               (atlas/foliage-instance
                {:tex-name "foliagePack_leaves_002.png"
-                :scale (v/vec2 9.0 3.0)})
+                :scale (v/vec2 18.0 3.0)})
               {::atlas/layer 2
                ::atlas/tint [0.6 0.7 0.6 0.5]
                ::t2d/position (v/vec2 1800 -900.0)
