@@ -59,7 +59,7 @@
               (atlas/foliage-instance
                {:tex-name "foliagePack_003.png"
                 :scale (v/vec2 2.0 2.0)})
-              {::atlas/layer -3
+              {::atlas/layer -5
                ::atlas/tint [1.0 1.0 1.0 0.7]
                ::t2d/position (v/vec2 0.0 120.0)})
 

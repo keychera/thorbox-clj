@@ -9,3 +9,7 @@
 .nrepl-port
 /config.edn
 imgui.ini
+.zzz
+
+# out
+target

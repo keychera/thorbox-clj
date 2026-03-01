@@ -9,6 +9,12 @@ need jdk25, clojure
 clojure -T:lets repl
 ```
 
+## release
+
+```
+clojure -T:lets release
+```
+
 ## native libs
 
 need babashka, local box2d at `../box2d` , thorvg at `../thorvg`, and their respective build tools
