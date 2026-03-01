@@ -2,12 +2,14 @@
   (:require
    [minusthree.engine.world :as world]
    [minusthree.rendering.atlas :as atlas]
-   [minusthree.rendering.gradientsky :as gradientsky])
+   [minusthree.rendering.gradientsky :as gradientsky]
+   [minusthree.rendering.naive-gif :as naive-gif])
   (:import
    [org.lwjgl.opengl GL45]))
 
 (def all
   [gradientsky/system
+   naive-gif/system
    atlas/system])
 
 (defn init [game]
@@ -30,6 +32,7 @@
 
     (gradientsky/render-world world)
     (atlas/render-world world)
+    (naive-gif/render-world world)
 
     game))
 
