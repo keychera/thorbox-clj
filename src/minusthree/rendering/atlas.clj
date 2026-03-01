@@ -2,9 +2,11 @@
   (:require
    [clojure.spec.alpha :as s]
    [clojure.walk :as walk]
+   [fastmath.vector :as v]
    [minusthree.engine.loading :as loading]
    [minusthree.engine.macros :refer [s-> vars->map]]
    [minusthree.engine.raw-data :as raw-data]
+   [minusthree.engine.transform2d :as t2d]
    [minusthree.engine.utils :as utils :refer [raw-from-here]]
    [minusthree.engine.world :as world :refer [esse]]
    [minusthree.gl.cljgl :as cljgl]
@@ -14,6 +16,7 @@
    [minusthree.rendering.+render-data :as +render-data]
    [odoyle.rules :as o])
   (:import
+   [fastmath.vector Vec2]
    [org.lwjgl.opengl GL45]))
 
 (defn transform-entry [item]
@@ -43,6 +46,9 @@
         v1 (/ (+ y height) atlas-h)]
     [u0 v0 u1 v1]))
 
+(def float-size 4)
+(def max-instance 420)
+
 (defn create-atlas-gl []
   (let [program-info (cljgl/create-program-info-from-source fbo-vs fbo-fs)
         gl-summons     (gl-magic/cast-spell
@@ -51,21 +57,30 @@
                          {:point-attr :a_pos :use-shader program-info :count 3 :component-type GL45/GL_FLOAT}
                          {:buffer-data raw-data/plane3d-uvs :buffer-type GL45/GL_ARRAY_BUFFER}
                          {:point-attr :a_uv :use-shader program-info :count 2 :component-type GL45/GL_FLOAT}
-                         {:buffer-data (* Float/SIZE 4 42) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
+
+                         {:buffer-data (* float-size 4 max-instance) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
+                          :buffer-name :pos-scale-buffer}
+                         {:point-attr :i_pos_scale :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
+                         {:vertex-attr-divisor :i_pos_scale :use-shader program-info :divisor 1}
+
+                         {:buffer-data (* float-size 4 max-instance) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
                           :buffer-name :crop-buffer}
                          {:point-attr :i_crop :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
                          {:vertex-attr-divisor :i_crop :use-shader program-info :divisor 1}
+
                          {:unbind-vao true}])
         vao          (-> gl-summons ::gl-magic/data ::gl-magic/vao (get :atlas))
-        crop-buffer  (-> gl-summons ::gl-magic/data ::shader/buffer (get :crop-buffer))]
+        crop-buffer  (-> gl-summons ::gl-magic/data ::shader/buffer (get :crop-buffer))
+        p-s-buffer   (-> gl-summons ::gl-magic/data ::shader/buffer (get :pos-scale-buffer))]
     {:program-info program-info :vao vao
-     :crop-buffer crop-buffer}))
+     :crop-buffer crop-buffer
+     :pos-scale-buffer p-s-buffer}))
 
 (s/def ::x int?)
 (s/def ::y int?)
 (s/def ::height int?)
 (s/def ::width int?)
-(s/def ::sub-tex-name string?)
+(s/def ::tex-name string?)
 (s/def ::crop-data (s/keys :req-un [::x ::y ::height ::width]))
 
 (defn init-fn [world _game]
@@ -81,9 +96,24 @@
                      name->crop-data (load-atlas-meta-xml "public/nondist/foliagePack_default.xml")]
                  [[::foliage-atlas ::texture/image atlas-img]
                   [::foliage-atlas ::texture/for ::foliage]
-                  [::foliage ::name->crop-data name->crop-data]]))))
-      #_(esse ::adhoc-instance {::sub-tex-name "foliagePack_047.png"})
-      (esse ::adhoc-instance2 {::sub-tex-name "foliagePack_002.png"})))
+                  [::foliage ::name->crop-data name->crop-data]]))))))
+
+(defn foliage-instance
+  [{:keys [tex-name pos scale]}]
+  {::tex-name tex-name
+   ::t2d/position (or pos (v/vec2 0.0 0.0))
+   ::t2d/scale (or scale  (v/vec2 1.0 1.0))})
+
+(defn after-refresh [world _game]
+  (-> world
+      (esse ::adhoc-instance
+            (foliage-instance 
+             {:tex-name "foliagePack_006.png"
+              :pos (v/vec2 -1016 0)}))
+      (esse ::adhoc-instance2
+            (foliage-instance
+             {:tex-name "foliagePack_047.png" 
+              :scale (v/vec2 0.5 0.5)}))))
 
 (s/def ::name->crop-data map?)
 
@@ -102,39 +132,58 @@
 
     ::map-foliage-instances
     [:what
-     [inst-id ::sub-tex-name sub-tex-name]
+     [inst-id ::tex-name sub-tex-name]
      [::foliage ::name->crop-data name->crop-data]
      :then
      (s-> session
-          (o/retract inst-id ::sub-tex-name)
+          (o/retract inst-id ::tex-name)
           (o/insert inst-id ::crop-data (get name->crop-data sub-tex-name)))]
 
     ::foliage-instances
     [:what
-     [inst-id ::crop-data crop-data]]}))
+     [inst-id ::crop-data crop-data]
+     [inst-id ::t2d/position position]
+     [inst-id ::t2d/scale scale]]}))
 
 (def system
   {::world/init-fn #'init-fn
+   ;::world/after-refresh #'after-refresh
    ::world/rules #'rules})
+
+;; hardcode
+(def image-res (float-array [1016 1016]))
+
+(defn foliage-instance->pos-scale [{:keys [^Vec2 position ^Vec2 scale crop-data]}]
+  (let [scale-x (* (:width crop-data) (.x scale))
+        scale-y (* (:height crop-data) (.y scale))]
+    [(.x position) (.y position) scale-x scale-y]))
 
 (defn render-world [world]
   (when-let [{:keys [atlas-texture render-data]} (utils/query-one world ::foliage-texture)]
-    (let [{:keys [program-info vao crop-buffer]} render-data
+    (let [{:keys [program-info vao pos-scale-buffer crop-buffer]} render-data
           gl-texture    (-> atlas-texture ::foliage-atlas :gl-texture)
-          instances     (into [] (map (comp atlas->uv-rect :crop-data)) (o/query-all world ::foliage-instances))
-          instances-arr (some-> (seq instances) flatten float-array)]
-      (when instances-arr
+          foliages      (o/query-all world ::foliage-instances)
+          pos-scale-arr (some->> (seq foliages)
+                                 (into [] (map foliage-instance->pos-scale))
+                                 flatten float-array)
+          rect-data     (into [] (map (comp atlas->uv-rect :crop-data)) foliages)
+          instances-arr (some-> (seq rect-data) flatten float-array)]
+      (when (seq foliages)
         (GL45/glUseProgram (:program program-info))
         (GL45/glBindVertexArray vao)
 
         (GL45/glActiveTexture GL45/GL_TEXTURE0)
         (GL45/glBindTexture GL45/GL_TEXTURE_2D gl-texture)
 
+        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER pos-scale-buffer)
+        (GL45/glBufferData GL45/GL_ARRAY_BUFFER pos-scale-arr GL45/GL_STREAM_DRAW)
+
         (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER crop-buffer)
         (GL45/glBufferData GL45/GL_ARRAY_BUFFER instances-arr GL45/GL_STREAM_DRAW)
 
         (cljgl/set-uniform program-info :u_tex 0)
-        (GL45/glDrawArraysInstanced GL45/GL_TRIANGLES 0 6 (count instances))))))
+        (cljgl/set-uniform program-info :u_res image-res)
+        (GL45/glDrawArraysInstanced GL45/GL_TRIANGLES 0 6 (count rect-data))))))
 
 (comment
   (require '[com.phronemophobic.viscous :as viscous])
