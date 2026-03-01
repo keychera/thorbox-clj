@@ -7,7 +7,6 @@
    [minusthree.engine.transform2d :as t2d]
    [minusthree.engine.types :as types]
    [minusthree.engine.world :as world :refer [esse]]
-   [minusthree.platform.jvm.sdl3-inputs :as inp]
    [minusthree.rendering.atlas :as atlas]
    [odoyle.rules :as o]))
 

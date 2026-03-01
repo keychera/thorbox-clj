@@ -81,6 +81,7 @@
 
 (s/def ::dimension ::types/vec2)
 (s/def ::horse-state #{:running :ascending :descending})
+(s/def ::horse-action #{:jump})
 (s/def ::horse-y-speed number?)
 
 (defn jump-logic [dt position y-speed]
@@ -97,7 +98,14 @@
 
 (def rules
   (o/ruleset
-   {::horse-anime
+   {::input-mapping
+    [:what
+     [::inp/input keyname ::inp/keyup]
+     :when (#{::inp/w ::inp/up} keyname)
+     :then
+     (insert! ::horse ::horse-action :jump)]
+
+    ::horse-anime
     [:what
      [::time/now ::time/total tt]
      [::horse ::texture/data horse-frames]
@@ -110,9 +118,10 @@
     ::horse-jump
     [:what
      [::horse ::horse-state :running]
-     [::inp/input ::inp/w ::inp/keyup]
+     [::horse ::horse-action :jump]
      :then
      (s-> session
+          (o/retract ::horse ::horse-action)
           (o/insert ::horse {::horse-state :ascending
                              ::horse-y-speed 2}))]
 
@@ -120,7 +129,7 @@
     [:what
      [::time/now ::time/delta dt]
      [::horse ::horse-state state {:then false}]
-     [::horse ::horse-y-speed y-speed {:then false}] 
+     [::horse ::horse-y-speed y-speed {:then false}]
      [::horse ::t2d/position position {:then false}]
      :when (not (= state :running))
      :then

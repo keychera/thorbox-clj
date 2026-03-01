@@ -17,10 +17,7 @@
   (not= (.get keyboard-state scancode) 0))
 
 (let [allowed-keys {::w SDLScancode/SDL_SCANCODE_W
-                    ::a SDLScancode/SDL_SCANCODE_A
-                    ::s SDLScancode/SDL_SCANCODE_S
-                    ::d SDLScancode/SDL_SCANCODE_D
-                    ::p SDLScancode/SDL_SCANCODE_P}]
+                    ::up SDLScancode/SDL_SCANCODE_UP}]
   (def keyname->scancode allowed-keys)
   (doseq [inp (keys allowed-keys)]
     (utils/defspec inp #{::keyup ::keydown ::idle}))
