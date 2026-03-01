@@ -40,22 +40,65 @@
   ["foliagePack_leaves_002.png"
    "foliagePack_leaves_010.png"])
 
+(defn random-tree [world]
+  (let [rng (java.util.Random. 42)
+        spread (* 1.5 stage-width)]
+    (reduce
+     (fn [world {:keys [idx pos variant height]}]
+       (esse world (str "tree-" idx)
+             (atlas/foliage-instance
+              {:tex-name (get trees variant)
+               :scale (v/vec2 2.0 2.0)})
+             {::atlas/layer 0
+              ::atlas/tint [1.0 1.0 1.0 0.0]
+              ::offset-pos (v/vec2 (- (* spread 2 pos) spread)
+                                   (- -120 (* 50 height)))}))
+     world
+     (into []
+           (map-indexed (fn [i r] (assoc r :idx i)))
+           (repeatedly 10
+                       (fn [] {:pos     (.nextFloat rng)
+                               :height  (.nextFloat rng)
+                               :variant (mod (.nextInt rng) (count trees))}))))))
+
 (defn after-refresh [world _game]
   (-> world
       (esse ::cloud-a
             (atlas/foliage-instance
              {:tex-name "foliagePack_050.png"
               :scale (v/vec2 2.0 2.0)})
-            {::atlas/layer 2
+            {::atlas/layer -2
              ::atlas/tint [1.0 1.0 1.0 1.0]
-             ::offset-pos (v/vec2 0.0 000.0)})
+             ::offset-pos (v/vec2 0.0 0.0)})
       (esse ::ground-a
             (atlas/foliage-instance
              {:tex-name "foliagePack_leaves_010.png"
               :scale (v/vec2 18.0 3.0)})
             {::atlas/layer 1
              ::atlas/tint [1.0 1.0 1.0 0.6]
-             ::offset-pos (v/vec2 0.0 -900.0)})))
+             ::offset-pos (v/vec2 0.0 -700.0)})
+      (esse ::ground-b
+            (atlas/foliage-instance
+             {:tex-name "foliagePack_leaves_010.png"
+              :scale (v/vec2 18.0 3.0)})
+            {::atlas/layer 1
+             ::atlas/tint [0.8 0.7 0.5 0.9]
+             ::offset-pos (v/vec2 0.0 -850.0)})
+      (esse ::grass-L
+            (atlas/foliage-instance
+             {:tex-name "foliagePack_leaves_002.png"
+              :scale (v/vec2 9.0 3.0)})
+            {::atlas/layer 2
+             ::atlas/tint [0.6 0.6 0.6 0.6]
+             ::offset-pos (v/vec2 -450.0 -900.0)})
+      (esse ::grass-R
+            (atlas/foliage-instance
+             {:tex-name "foliagePack_leaves_002.png"
+              :scale (v/vec2 9.0 3.0)})
+            {::atlas/layer 2
+             ::atlas/tint [0.6 0.6 0.6 0.6]
+             ::offset-pos (v/vec2 450.0 -900.0)})
+      (random-tree)))
 
 (s/def ::offset-pos ::types/vec2)
 
@@ -89,3 +132,7 @@
   {::world/init-fn #'init-fn
    ::world/after-refresh #'after-refresh
    ::world/rules #'rules})
+
+(comment
+  (let [rng (java.util.Random. 42)]
+    (repeatedly 10 #(.nextFloat rng))))
