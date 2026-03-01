@@ -42,6 +42,13 @@
 
 (defn after-refresh [world _game]
   (-> world
+      (esse ::cloud-a
+            (atlas/foliage-instance
+             {:tex-name "foliagePack_050.png"
+              :scale (v/vec2 2.0 2.0)})
+            {::atlas/layer 2
+             ::atlas/tint [1.0 1.0 1.0 1.0]
+             ::offset-pos (v/vec2 0.0 000.0)})
       (esse ::ground-a
             (atlas/foliage-instance
              {:tex-name "foliagePack_leaves_010.png"
