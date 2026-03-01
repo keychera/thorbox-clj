@@ -2,7 +2,7 @@
   (:require
    [minusthree.engine.engine :as engine]
    [minusthree.engine.time :as time]
-   [minusthree.platform.jvm.sdl3-events :as sdl3-input])
+   [minusthree.platform.jvm.sdl3-events :as sdl3-events])
   (:import
    [org.lwjgl.opengl GL]
    [org.lwjgl.sdl
@@ -60,7 +60,7 @@
                :sdl-window    sdl-window
                :refresh-flag* refresh-flag*})
 
-            (do-we-stop? [{::sdl3-input/keys [stop?]}]
+            (do-we-stop? [{::sdl3-events/keys [stop?]}]
               (or stop? (and (some? stop-flag*) @stop-flag*)))
 
             (do-we-refresh? [_game]
@@ -72,7 +72,7 @@
               (let [total (SDLTimer/SDL_GetTicks)
                     delta (- total (::time/total game))
                     game  (time/update-time game total delta)
-                    game' (sdl3-input/poll-events game event-buf)]
+                    game' (sdl3-events/poll-events game event-buf)]
                 (SDLVideo/SDL_SetWindowTitle sdl-window (str "frametime: " delta " ms"))
                 (SDLVideo/SDL_GL_SwapWindow sdl-window)
                 game'))
