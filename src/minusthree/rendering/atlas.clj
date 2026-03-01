@@ -35,7 +35,7 @@
           (map (fn [k] ((juxt :name #(dissoc % :name)) (:attrs k))))
           (:content crop-data))))
 
-(def fbo-vs (raw-from-here "sprite.vert"))
+(def fbo-vs (raw-from-here "sprite-instanced.vert"))
 (def fbo-fs (raw-from-here "sprite.frag"))
 
 (defn atlas->uv-rect [{:keys [x y width height]}]
