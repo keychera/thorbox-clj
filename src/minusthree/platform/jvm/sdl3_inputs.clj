@@ -23,9 +23,9 @@
                     ::p SDLScancode/SDL_SCANCODE_P}]
   (def keyname->scancode allowed-keys)
   (doseq [inp (keys allowed-keys)]
-    (utils/defspec inp #{::keyup ::keydown}))
+    (utils/defspec inp #{::keyup ::keydown ::idle}))
   (def default-facts
-    (into {} (map (fn [k] [k ::keyup])) (keys allowed-keys))))
+    (into {} (map (fn [k] [k ::idle])) (keys allowed-keys))))
 
 (defn process-input [{previously-pressed? ::pressed? :as prev-game}]
   (let [kb-state (SDLKeyboard/SDL_GetKeyboardState)
@@ -38,7 +38,7 @@
                  (update ::pressed? conj keyname))
              (if (and (::event-keyup game) (previously-pressed? keyname))
                (update game ::world/this o/insert ::input keyname ::keyup)
-               game)))
+               (update game ::world/this o/insert ::input keyname ::idle))))
          game' keyname->scancode)
         (dissoc ::event-keyup))))
 

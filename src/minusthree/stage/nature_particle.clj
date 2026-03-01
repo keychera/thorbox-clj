@@ -195,23 +195,7 @@
 
 (def rules
   (o/ruleset
-   {::control
-    [:what
-     [::time/now ::time/delta dt]
-     [::inp/input keyname ::inp/keydown]
-     [::player ::t2d/position player-pos {:then false}]
-     :when
-     (#{::inp/a ::inp/d} keyname)
-     :then
-     (let [speed   1016
-           delta-s (* dt 1e-3)
-           dist    (case keyname
-                     ::inp/a (* -1 speed delta-s)
-                     ::inp/d (* speed delta-s))
-           move    (v/vec2 dist 0.0)]
-       (insert! ::player ::t2d/position (v/add player-pos move)))]
-
-    ::nature-as-particle
+   {::nature-as-particle
     [:what
      [::time/now ::time/delta dt]
      [particle-source-id ::particle-config config]
