@@ -12,7 +12,7 @@
 (defn poll-events [game event-buf]
   (if (SDLEvents/SDL_PollEvent event-buf)
     (recur (event-wiring game event-buf) event-buf)
-    game))
+    (sdl3-inputs/process-input game)))
 
 (defn event= [event-enum event]
   (= event-enum (.type event)))
@@ -23,10 +23,7 @@
     SDLEvents/SDL_EVENT_QUIT
     (assoc game ::stop? true)
 
-    SDLEvents/SDL_EVENT_KEY_DOWN 
-    (sdl3-inputs/process-input game ::sdl3-inputs/keydown)
-
     SDLEvents/SDL_EVENT_KEY_UP
-    (sdl3-inputs/process-input game ::sdl3-inputs/keyup)
+    (assoc game ::sdl3-inputs/event-keyup true)
 
     #_else game))

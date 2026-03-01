@@ -11,27 +11,36 @@
 (s/def ::keyup some?)
 (s/def ::keydown some?)
 
-(defn get-key [scancode ^ByteBuffer keyboard-state]
+(s/def ::event-keyup some?)
+
+(defn pressed? [^ByteBuffer keyboard-state scancode]
   (not= (.get keyboard-state scancode) 0))
 
-(let [allowed-key [::w ::a ::s ::d ::p]]
-  (doseq [inp allowed-key]
+(let [allowed-keys {::w SDLScancode/SDL_SCANCODE_W
+                    ::a SDLScancode/SDL_SCANCODE_A
+                    ::s SDLScancode/SDL_SCANCODE_S
+                    ::d SDLScancode/SDL_SCANCODE_D
+                    ::p SDLScancode/SDL_SCANCODE_P}]
+  (def keyname->scancode allowed-keys)
+  (doseq [inp (keys allowed-keys)]
     (utils/defspec inp #{::keyup ::keydown}))
   (def default-facts
-    (into {} (map (fn [k] [k ::keyup])) allowed-key)))
+    (into {} (map (fn [k] [k ::keyup])) (keys allowed-keys))))
 
-(defn process-input [game press-state]
+(defn process-input [{previously-pressed? ::pressed? :as prev-game}]
   (let [kb-state (SDLKeyboard/SDL_GetKeyboardState)
-        key-word (condp get-key kb-state
-                   SDLScancode/SDL_SCANCODE_W ::w
-                   SDLScancode/SDL_SCANCODE_A ::a
-                   SDLScancode/SDL_SCANCODE_S ::s
-                   SDLScancode/SDL_SCANCODE_D ::d
-                   SDLScancode/SDL_SCANCODE_P ::p
-                   nil)]
-    (if key-word
-      (update game ::world/this o/insert ::input key-word press-state)
-      game)))
+        game'    (assoc prev-game ::pressed? #{})]
+    (-> (reduce-kv
+         (fn [game keyname scancode]
+           (if (pressed? kb-state scancode)
+             (-> game
+                 (update ::world/this o/insert ::input keyname ::keydown)
+                 (update ::pressed? conj keyname))
+             (if (and (::event-keyup game) (previously-pressed? keyname))
+               (update game ::world/this o/insert ::input keyname ::keyup)
+               game)))
+         game' keyname->scancode)
+        (dissoc ::event-keyup))))
 
 (defn init-fn [world _game]
   (o/insert world ::input default-facts))
