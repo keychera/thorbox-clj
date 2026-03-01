@@ -1,11 +1,11 @@
 horsing around:
     ✔ gradient sky @done(26-03-01 01:47)
     ✔ texture atlas @done(26-03-01 01:47)
-    ☐ instancing
-    ☐ parallaxing
+    ✔ instancing @done(26-03-01 17:11)
+    ✔ parallaxing @done(26-03-01 17:11)
     ☐ camera-ing
     ☐ carrot
-    ☐ horse
+    ✔ horse @done(26-03-01 17:11)
     ☐ scoring
     ☐ simple control A D
     ☐ button ui
