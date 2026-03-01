@@ -13,6 +13,23 @@
 (def fbo-vs (raw-from-here "sky.vert"))
 (def fbo-fs (raw-from-here "sky.frag"))
 
+(defn hex->rgb [hex-int]
+  (let [r (float (/ (bit-and (bit-shift-right hex-int 16) 0xFF) 0xFF))
+        g (float (/ (bit-and (bit-shift-right hex-int 8) 0xFF) 0xFF))
+        b (float (/ (bit-and hex-int 0xFF) 0xFF))]
+    (java.lang.String/format  
+     java.util.Locale/ENGLISH
+     "vec3 color = vec3(%.2f, %.2f, %.2f);" 
+     (object-array [r g b]))))
+
+(comment
+  ;; hardcoding purposes
+
+  (println (hex->rgb 0xA5DEE5))
+  (println (hex->rgb 0xE8FAF5))
+
+  :-)
+
 (defn create-sky-gl []
   (let [program-info (cljgl/create-program-info-from-source fbo-vs fbo-fs)
         gl-summons     (gl-magic/cast-spell
