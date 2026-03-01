@@ -7,7 +7,7 @@
    [minusthree.platform.jvm.sdl3-inputs :as sdl3-inputs]
    [minusthree.rendering.+core :as rendering]
    [minusthree.stage.debug-ui :as debug-ui]
-   [minusthree.stage.level1 :as level1]))
+   [minusthree.stage.nature-particle :as nature-particle]))
 
 (def all
   [time/system
@@ -19,6 +19,6 @@
 
    rendering/all
 
-   level1/system
+   nature-particle/system
 
    debug-ui/system])

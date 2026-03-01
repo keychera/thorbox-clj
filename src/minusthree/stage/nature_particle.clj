@@ -1,4 +1,4 @@
-(ns minusthree.stage.level1
+(ns minusthree.stage.nature-particle
   (:require
    [clojure.spec.alpha :as s]
    [fastmath.vector :as v]
