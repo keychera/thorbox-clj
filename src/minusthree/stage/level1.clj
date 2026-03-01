@@ -19,15 +19,37 @@
   (-> world
       (o/insert ::player ::t2d/position (v/vec2 0.0 0.0))))
 
+(def trees
+  ["foliagePack_006.png"
+   "foliagePack_007.png"
+   "foliagePack_008.png"
+   "foliagePack_009.png"
+   "foliagePack_010.png"])
+
+(def bushes
+  ["foliagePack_049.png"
+   "foliagePack_050.png"
+   "foliagePack_051.png"
+   "foliagePack_052.png"])
+
+(def rocks
+  ["foliagePack_055.png"
+   "foliagePack_061.png"])
+
+(def terrains
+  ["foliagePack_leaves_002.png"
+   "foliagePack_leaves_010.png"])
+
 (defn after-refresh [world _game]
   (-> world
-      (esse ::a-foliage
-            (atlas/foliage-instance {:tex-name "foliagePack_047.png"
-                                     :pos (v/vec2 -508.0 0.0)})
-            {::foliage-layer 1
-             ::offset-pos (v/vec2 0.0 0.0)})))
+      (esse ::ground-a
+            (atlas/foliage-instance
+             {:tex-name "foliagePack_leaves_010.png"
+              :scale (v/vec2 18.0 3.0)})
+            {::atlas/layer 1
+             ::atlas/tint [1.0 1.0 1.0 0.6]
+             ::offset-pos (v/vec2 0.0 -900.0)})))
 
-(s/def ::foliage-layer number?)
 (s/def ::offset-pos ::types/vec2)
 
 (def rules
@@ -51,7 +73,7 @@
     ::adhoc-player-pos
     [:what
      [::player ::t2d/position pos]
-     [foliage-id ::foliage-layer _]
+     [foliage-id ::atlas/layer _]
      [foliage-id ::offset-pos offset-pos]
      :then
      (insert! foliage-id ::t2d/position (v/add offset-pos pos))]}))

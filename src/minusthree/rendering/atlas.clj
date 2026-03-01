@@ -59,22 +59,25 @@
                          {:point-attr :a_uv :use-shader program-info :count 2 :component-type GL45/GL_FLOAT}
 
                          {:buffer-data (* float-size 4 max-instance) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
-                          :buffer-name :pos-scale-buffer}
+                          :buffer-name ::pos-scale-buffer}
                          {:point-attr :i_pos_scale :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
                          {:vertex-attr-divisor :i_pos_scale :use-shader program-info :divisor 1}
 
+                         ;; maybe this isn't the most efficient way to do this but we cant afford to microoptimize
                          {:buffer-data (* float-size 4 max-instance) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
-                          :buffer-name :crop-buffer}
+                          :buffer-name ::tint-buffer}
+                         {:point-attr :i_tint :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
+                         {:vertex-attr-divisor :i_tint :use-shader program-info :divisor 1}
+
+                         {:buffer-data (* float-size 4 max-instance) :buffer-type GL45/GL_ARRAY_BUFFER :usage GL45/GL_STREAM_DRAW
+                          :buffer-name ::crop-buffer}
                          {:point-attr :i_crop :use-shader program-info :count 4 :component-type GL45/GL_FLOAT}
                          {:vertex-attr-divisor :i_crop :use-shader program-info :divisor 1}
 
                          {:unbind-vao true}])
         vao          (-> gl-summons ::gl-magic/data ::gl-magic/vao (get :atlas))
-        crop-buffer  (-> gl-summons ::gl-magic/data ::shader/buffer (get :crop-buffer))
-        p-s-buffer   (-> gl-summons ::gl-magic/data ::shader/buffer (get :pos-scale-buffer))]
-    {:program-info program-info :vao vao
-     :crop-buffer crop-buffer
-     :pos-scale-buffer p-s-buffer}))
+        buffers      (-> gl-summons ::gl-magic/data ::shader/buffer)]
+    {:program-info program-info :vao vao :buffers buffers}))
 
 (s/def ::x int?)
 (s/def ::y int?)
@@ -104,18 +107,9 @@
    ::t2d/position (or pos (v/vec2 0.0 0.0))
    ::t2d/scale (or scale  (v/vec2 1.0 1.0))})
 
-(defn after-refresh [world _game]
-  (-> world
-      (esse ::adhoc-instance
-            (foliage-instance 
-             {:tex-name "foliagePack_006.png"
-              :pos (v/vec2 -1016 0)}))
-      (esse ::adhoc-instance2
-            (foliage-instance
-             {:tex-name "foliagePack_047.png" 
-              :scale (v/vec2 0.5 0.5)}))))
-
 (s/def ::name->crop-data map?)
+(s/def ::tint vector?)
+(s/def ::layer int?)
 
 (def rules
   (o/ruleset
@@ -142,6 +136,8 @@
     ::foliage-instances
     [:what
      [inst-id ::crop-data crop-data]
+     [inst-id ::tint tint]
+     [inst-id ::layer layer]
      [inst-id ::t2d/position position]
      [inst-id ::t2d/scale scale]]}))
 
@@ -160,12 +156,14 @@
 
 (defn render-world [world]
   (when-let [{:keys [atlas-texture render-data]} (utils/query-one world ::foliage-texture)]
-    (let [{:keys [program-info vao pos-scale-buffer crop-buffer]} render-data
+    (let [{:keys [program-info vao buffers]} render-data
           gl-texture    (-> atlas-texture ::foliage-atlas :gl-texture)
-          foliages      (o/query-all world ::foliage-instances)
+          foliages      (->> (o/query-all world ::foliage-instances)
+                             (sort-by :layer))
           pos-scale-arr (some->> (seq foliages)
                                  (into [] (map foliage-instance->pos-scale))
                                  flatten float-array)
+          tint-arr      (some->> (seq foliages) (into [] (map :tint)) flatten float-array)
           rect-data     (into [] (map (comp atlas->uv-rect :crop-data)) foliages)
           instances-arr (some-> (seq rect-data) flatten float-array)]
       (when (seq foliages)
@@ -175,10 +173,13 @@
         (GL45/glActiveTexture GL45/GL_TEXTURE0)
         (GL45/glBindTexture GL45/GL_TEXTURE_2D gl-texture)
 
-        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER pos-scale-buffer)
+        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER (::pos-scale-buffer buffers))
         (GL45/glBufferData GL45/GL_ARRAY_BUFFER pos-scale-arr GL45/GL_STREAM_DRAW)
 
-        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER crop-buffer)
+        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER (::tint-buffer buffers))
+        (GL45/glBufferData GL45/GL_ARRAY_BUFFER tint-arr GL45/GL_STREAM_DRAW)
+
+        (GL45/glBindBuffer GL45/GL_ARRAY_BUFFER (::crop-buffer buffers))
         (GL45/glBufferData GL45/GL_ARRAY_BUFFER instances-arr GL45/GL_STREAM_DRAW)
 
         (cljgl/set-uniform program-info :u_tex 0)
