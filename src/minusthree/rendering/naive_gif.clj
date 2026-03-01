@@ -101,6 +101,7 @@
    {::input-mapping
     [:what
      [::inp/input keyname ::inp/keyup]
+     [::horse ::horse-state :running]
      :when (#{::inp/w ::inp/up} keyname)
      :then
      (insert! ::horse ::horse-action :jump)]
