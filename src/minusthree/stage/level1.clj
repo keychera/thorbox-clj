@@ -2,7 +2,7 @@
   (:require
    [clojure.spec.alpha :as s]
    [fastmath.vector :as v]
-   [minusthree.engine.macros :refer [insert!]]
+   [minusthree.engine.macros :refer [insert! s->]]
    [minusthree.engine.time :as time]
    [minusthree.engine.transform2d :as t2d]
    [minusthree.engine.types :as types]
@@ -40,67 +40,67 @@
   ["foliagePack_leaves_002.png"
    "foliagePack_leaves_010.png"])
 
-(defn random-tree [world]
-  (let [rng (java.util.Random. 42)
-        spread (* 1.5 stage-width)]
-    (reduce
-     (fn [world {:keys [idx pos variant height]}]
-       (esse world (str "tree-" idx)
-             (atlas/foliage-instance
-              {:tex-name (get trees variant)
-               :scale (v/vec2 2.0 2.0)})
-             {::atlas/layer 0
-              ::atlas/tint [1.0 1.0 1.0 0.0]
-              ::offset-pos (v/vec2 (- (* spread 2 pos) spread)
-                                   (- -120 (* 50 height)))}))
-     world
-     (into []
-           (map-indexed (fn [i r] (assoc r :idx i)))
-           (repeatedly 10
-                       (fn [] {:pos     (.nextFloat rng)
-                               :height  (.nextFloat rng)
-                               :variant (mod (.nextInt rng) (count trees))}))))))
-
 (defn after-refresh [world _game]
-  (-> world
-      (esse ::cloud-a
-            (atlas/foliage-instance
-             {:tex-name "foliagePack_050.png"
-              :scale (v/vec2 2.0 2.0)})
-            {::atlas/layer -2
-             ::atlas/tint [1.0 1.0 1.0 1.0]
-             ::offset-pos (v/vec2 0.0 0.0)})
-      (esse ::ground-a
-            (atlas/foliage-instance
-             {:tex-name "foliagePack_leaves_010.png"
-              :scale (v/vec2 18.0 3.0)})
-            {::atlas/layer 1
-             ::atlas/tint [1.0 1.0 1.0 0.6]
-             ::offset-pos (v/vec2 0.0 -700.0)})
-      (esse ::ground-b
-            (atlas/foliage-instance
-             {:tex-name "foliagePack_leaves_010.png"
-              :scale (v/vec2 18.0 3.0)})
-            {::atlas/layer 1
-             ::atlas/tint [0.8 0.7 0.5 0.9]
-             ::offset-pos (v/vec2 0.0 -850.0)})
-      (esse ::grass-L
-            (atlas/foliage-instance
-             {:tex-name "foliagePack_leaves_002.png"
-              :scale (v/vec2 9.0 3.0)})
-            {::atlas/layer 2
-             ::atlas/tint [0.6 0.6 0.6 0.6]
-             ::offset-pos (v/vec2 -450.0 -900.0)})
-      (esse ::grass-R
-            (atlas/foliage-instance
-             {:tex-name "foliagePack_leaves_002.png"
-              :scale (v/vec2 9.0 3.0)})
-            {::atlas/layer 2
-             ::atlas/tint [0.6 0.6 0.6 0.6]
-             ::offset-pos (v/vec2 450.0 -900.0)})
-      (random-tree)))
+  (let [base-speed -0.5]
+    (-> world
+        #_(esse ::ground-b
+                (atlas/foliage-instance
+                 {:tex-name "foliagePack_leaves_010.png"
+                  :scale (v/vec2 18.0 3.0)})
+                {::atlas/layer 1
+                 ::atlas/tint [0.8 0.7 0.5 0.9]
+                 ::offset-pos (v/vec2 0.0 -850.0)})
+        #_(esse ::grass-L
+                (atlas/foliage-instance
+                 {:tex-name "foliagePack_leaves_002.png"
+                  :scale (v/vec2 9.0 3.0)})
+                {::atlas/layer 2
+                 ::atlas/tint [0.6 0.6 0.6 0.6]
+                 ::offset-pos (v/vec2 -450.0 -900.0)})
+        (esse ::tree-particle
+              {::particle-config
+               {:tex-fn (fn [] (get trees (rand-int (count trees))))
+                :scale (v/vec2 2.0 2.0)
+                :starting-pos (v/vec2 2400.0 -150.0)
+                :layer -2
+                :tint [1.0 1.0 1.0 0.0]
+                :delay-time-fn (fn [] (/ (+ 200 (rand-int 200)) (abs base-speed)))
+                :parallax-x-rate base-speed}
+               ::acc-time 0})
+        (esse ::ground-particle
+              {::particle-config
+               {:tex-fn (fn [] "foliagePack_leaves_010.png")
+                :scale (v/vec2 18.0 3.0)
+                :starting-pos (v/vec2 2400.0 -700.0)
+                :layer 1
+                :tint [1.0 1.0 1.0 0.6]
+                :delay-time-fn (fn [] (/ 2200 (abs base-speed)))
+                :parallax-x-rate base-speed}
+               ::acc-time 0})
+        (esse ::grass-particle
+              {::particle-config
+               {:tex-fn (fn [] "foliagePack_leaves_002.png")
+                :scale (v/vec2 9.0 3.0)
+                :starting-pos (v/vec2 2400.0 -900.0)
+                :layer 2
+                :tint [0.6 0.7 0.6 0.3]
+                :delay-time-fn (fn [] (/ 1100 (abs base-speed)))
+                :parallax-x-rate base-speed}
+               ::acc-time 0}))))
 
 (s/def ::offset-pos ::types/vec2)
+
+(s/def ::scale ::types/vec2)
+(s/def ::layer int?)
+(s/def ::tint vector?)
+(s/def ::starting-pos ::types/vec2)
+(s/def ::tex-fn fn?)
+(s/def ::delay-time-fn fn?)
+(s/def ::parallax-x-rate number?)
+(s/def ::particle-config
+  (s/keys :req-un [::tex-fn ::scale ::layer ::tint ::starting-pos ::delay-time-fn ::parallax-x-rate]))
+(s/def ::acc-time number?)
+(s/def ::particle? boolean?)
 
 (def rules
   (o/ruleset
@@ -120,13 +120,56 @@
            move    (v/vec2 dist 0.0)]
        (insert! ::player ::t2d/position (v/add player-pos move)))]
 
-    ::adhoc-player-pos
+    ::nature-as-particle
     [:what
-     [::player ::t2d/position pos]
-     [foliage-id ::atlas/layer _]
-     [foliage-id ::offset-pos offset-pos]
+     [::time/now ::time/delta dt]
+     [particle-source-id ::particle-config config]
+     [particle-source-id ::acc-time acc-time {:then false}]
      :then
-     (insert! foliage-id ::t2d/position (v/add offset-pos pos))]}))
+     (if (< acc-time 0)
+       (let [{:keys [tex-fn scale layer tint starting-pos parallax-x-rate]} config]
+         (s-> session
+              (esse (str particle-source-id (random-uuid))
+                    (atlas/foliage-instance
+                     {:tex-name (tex-fn)
+                      :scale scale})
+                    {::atlas/layer layer
+                     ::atlas/tint tint
+                     ::t2d/position starting-pos
+                     ::parallax-x-rate parallax-x-rate
+                     ::particle? true})
+              (o/insert particle-source-id ::acc-time ((:delay-time-fn config)))))
+       (insert! particle-source-id ::acc-time (- acc-time dt)))]
+
+    ::nature-parallax
+    [:what
+     [::time/now ::time/delta dt]
+     [particle-id ::parallax-x-rate parallax-x-rate]
+     [particle-id ::t2d/position pos {:then false}]
+     :then
+     (let [move (v/vec2 (* dt parallax-x-rate) 0.0)]
+       (insert! particle-id ::t2d/position (v/add pos move)))]
+
+    ::live-particle
+    [:what
+     [particle-id ::t2d/position pos]
+     [particle-id ::particle? true {:then false}]
+     :then
+     (when (< (.x pos) -2200)
+       (insert! particle-id ::particle? false))]
+
+    ::count-particle
+    [:what
+     [particle-id ::particle? state]
+     :then-finally
+     (println "live particle: " (count (o/query-all session ::count-particle)))]
+
+    ::delete-particle
+    [:what
+     [particle-id ::particle? false]
+     [particle-id attr _]
+     :then
+     (s-> session (o/retract particle-id attr))]}))
 
 (def system
   {::world/init-fn #'init-fn
