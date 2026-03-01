@@ -3,9 +3,9 @@ horsing around:
     ✔ texture atlas @done(26-03-01 01:47)
     ✔ instancing @done(26-03-01 17:11)
     ✔ parallaxing @done(26-03-01 17:11)
-    ☐ camera-ing
-    ☐ carrot
+    ✘ camera-ing @cancelled(26-03-01 21:46)
+    ✘ carrot @cancelled(26-03-01 21:46)
     ✔ horse @done(26-03-01 17:11)
-    ☐ scoring
-    ☐ simple control A D
-    ☐ button ui
+    ✘ scoring @cancelled(26-03-01 21:46)
+    ✘ simple control A D @cancelled(26-03-01 21:46)
+    ✘ button ui @cancelled(26-03-01 21:46)

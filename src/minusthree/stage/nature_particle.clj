@@ -63,26 +63,6 @@
                ::atlas/tint [1.0 1.0 1.0 0.7]
                ::t2d/position (v/vec2 0.0 120.0)})
 
-        #_(esse ::debug
-                (atlas/foliage-instance
-                 {:tex-name "foliagePack_022.png"
-                  :scale (v/vec2 2.0 2.0)})
-                {::atlas/layer -3
-                 ::atlas/tint [1.0 1.0 1.0 0.0]
-                 ::t2d/position (v/vec2 0.0 620.0)})
-
-        #_(esse ::ground-particle
-                {::particle-config
-                 {:tex-fn (fn [] "foliagePack_leaves_010.png")
-                  :scale (v/vec2 18.0 3.0)
-                  :starting-pos (v/vec2 2400.0 -700.0)
-                  :layer 1
-                  :tint [1.0 1.0 1.0 0.6]
-                  :delay-time-fn (fn [] (/ 2000 (abs base-speed)))
-                  :parallax-x-rate base-speed}
-                 ::acc-time 0})
-
-
         ;; this *-init is workaround for now
         (esse ::far-grass-particle-init
               (atlas/foliage-instance
@@ -125,7 +105,6 @@
                   :delay-time-fn (fn [] (/ 900 (abs further)))
                   :parallax-x-rate further})
                ::acc-time 0})
-
 
         (esse ::grass-particle-init
               (atlas/foliage-instance
@@ -174,11 +153,9 @@
                 :starting-pos (v/vec2 2400.0 -900.0)
                 :layer 2
                 :tint [0.6 0.7 0.6 0.5]
-                :delay-time-fn (fn [] (/ 900 (abs base-speed)))
+                :delay-time-fn (fn [] (/ 600 (abs base-speed)))
                 :parallax-x-rate base-speed}
                ::acc-time 0}))))
-
-(s/def ::offset-pos ::types/vec2)
 
 (s/def ::scale ::types/vec2)
 (s/def ::layer int?)

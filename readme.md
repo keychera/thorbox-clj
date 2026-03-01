@@ -1,6 +1,12 @@
-# ~~thorvg + box2d~~ + lwjgl in clojure
+# horsing around
 
-thorvg and box2d disabled for now since I am sensing a problem brewing during distribution
+the source code for the game https://heritonaru.itch.io/horsing-around 
+
+made for [Mini Jam 205: Horses](https://itch.io/jam/mini-jam-205-horses)
+
+![horsing](horsing.gif)
+
+this project was named thorbox because I originally planned to use thorvg and box2d, but I scrapped that idea midway because I felt like I will encounter a problem during distribution for the game jam above.
 
 ## repl dev
 
@@ -13,9 +19,10 @@ clojure -T:lets repl
 
 ```
 clojure -T:lets release
+clojure -T:lets packr
 ```
 
-## native libs
+## native libs (unused)
 
 need babashka, local box2d at `../box2d` , thorvg at `../thorvg`, and their respective build tools
 
