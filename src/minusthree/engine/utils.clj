@@ -3,8 +3,8 @@
    [clojure.java.io :as io]
    [clojure.spec.alpha :as s]
    [clojure.string :as str]
-   [clojure.xml :as xml]
    [fastmath.matrix :as mat]
+   [minusthree.engine.macros :refer [vars->map]]
    [odoyle.rules :as o])
   (:import
    [java.nio ByteBuffer FloatBuffer]
@@ -111,6 +111,19 @@
 (defmacro defspec [k spec-form]
   `(s/def-impl ~k (quote ~spec-form) ~spec-form))
 
-(defn get-xml [path]
-  (with-open [rdr (io/input-stream (io/resource path))]
-    (xml/parse rdr)))
+(def subtexture-xml-regex #_adhoc
+  #".*SubTexture name=\"(.*)\" x=\"(.*)\" y=\"(.*)\" width=\"(.*)\" height=\"(.*)\".*")
+
+(defn parse-atlas-subtexture [atlas-path]
+  (with-open [rdr (io/reader (io/resource atlas-path))]
+    (into {}
+          (comp
+           (map (fn [element]
+                  (let [[_ tex-name x y width height] (re-find subtexture-xml-regex element)]
+                    (when tex-name [tex-name (vars->map x y width height)]))))
+           (filter some?))
+          (line-seq rdr))))
+
+(comment
+  *e
+  (parse-atlas-subtexture (io/file "resources/public/nondist/foliagePack_default.xml")))

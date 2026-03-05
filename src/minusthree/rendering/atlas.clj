@@ -28,12 +28,9 @@
         :else item))
     item))
 
-(defn load-atlas-meta-xml [path]
-  (let [meta-xml  (utils/get-xml path)
-        crop-data (walk/postwalk transform-entry meta-xml)]
-    (into {}
-          (map (fn [k] ((juxt :name #(dissoc % :name)) (:attrs k))))
-          (:content crop-data))))
+(defn load-atlas-data [path]
+  (let [atlas-data  (utils/parse-atlas-subtexture path)]
+    (walk/postwalk transform-entry atlas-data)))
 
 (def fbo-vs (raw-from-here "sprite-instanced.vert"))
 (def fbo-fs (raw-from-here "sprite.frag"))
@@ -96,7 +93,7 @@
             (loading/push
              (fn []
                (let [atlas-img       (utils/get-image-from-resource "public/nondist/foliagePack_default.png")
-                     name->crop-data (load-atlas-meta-xml "public/nondist/foliagePack_default.xml")]
+                     name->crop-data (load-atlas-data "public/nondist/foliagePack_default.xml")]
                  [[::foliage-atlas ::texture/image atlas-img]
                   [::foliage-atlas ::texture/for ::foliage]
                   [::foliage ::name->crop-data name->crop-data]]))))))
@@ -191,6 +188,6 @@
   (require '[com.phronemophobic.viscous :as viscous])
 
   (viscous/inspect debug-var)
-  (load-atlas-meta-xml "public/nondist/foliagePack_default.xml")
+  (load-atlas-data "public/nondist/foliagePack_default.xml")
 
   :-)

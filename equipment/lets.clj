@@ -81,8 +81,7 @@
                    (file-seq (io/file home))))))
 
 (def java-modules
-  ["java.base"
-   "java.xml"])
+  ["java.base"])
 
 (defn jlink [& _]
   (let [jre  "target/runtime"
