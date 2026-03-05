@@ -19,6 +19,7 @@ clojure -T:lets repl
 
 ```
 clojure -T:lets release
+clojure -T:lets jlink
 clojure -T:lets packr
 ```
 
@@ -31,3 +32,5 @@ this will build local box2d and thorvg shared libs and put it inside `resources/
 ```
 bb -x bb/prep
 ```
+
+# jlink

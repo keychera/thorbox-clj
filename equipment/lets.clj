@@ -90,20 +90,42 @@
     (println "running" cmds)
     (b/process {:out :inherit :command-args cmds})))
 
+(defn find-jar []
+  (let [home "target/output/jar"]
+    (first (filter #(str/ends-with? (.getName %) ".jar")
+                   (file-seq (io/file home))))))
+
+(def java-modules
+  ["java.base"
+   "java.xml"
+   "java.sql"])
+
+(defn jlink [& _]
+  (let [jre  "target/runtime"
+        cmds ["jlink" "--add-modules" (str/join \, java-modules)
+              "--no-header-files"
+              "--no-man-pages"
+              "--output" jre]
+        java (str jre "/bin/java.exe")
+        jtry [java "-jar" (.getAbsolutePath (find-jar))]]
+    (b/delete {:path jre})
+    (println "running" cmds)
+    (b/process {:out :inherit :command-args cmds})
+    (println "trying the game" jtry)
+    (b/process {:out :inherit :command-args jtry})))
 
 (defn packr [& _]
   (b/delete {:path "target/output/packr"})
-  (let [home "target/output/jar"
-        jar  (first
-              (eduction
-               (filter #(str/ends-with? (.getName %) ".jar"))
-               (file-seq (io/file home))))
+  (let [pack "target/output/packr"
+        jre  "target/runtime"
+        game "HorsingAround"
         cmds ["java" "-jar" "packr-all-4.0.0.jar"
               "--platform" "windows64"
-              "--jdk" "OpenJDK25U-jre_x64_windows_hotspot_25.0.2_10.zip"
-              "--executable" "HorsingAround"
-              "--classpath" (.getAbsolutePath jar)
+              "--jdk" jre
+              "--executable" game
+              "--classpath" (.getAbsolutePath (find-jar))
               "--mainclass" "minusthree.platform.jvm.jvm_game"
-              "--output" "target/output/packr"]]
+              "--output" pack]]
     (println "running" cmds)
-    (b/process {:out :inherit :command-args cmds})))
+    (b/process {:out :inherit :command-args cmds})
+    (b/zip {:src-dirs [pack] :zip-file (str "target/output/" game "-win.zip")})))
