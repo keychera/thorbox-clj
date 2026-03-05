@@ -55,6 +55,7 @@
   [{:keys [basis uber-file]
     :or {uber-file base-uber-file
          basis (basis-by-os)}}]
+  (b/delete {:path "target/output/jar"})
   (println "making an uberjar...")
   (b/write-pom {:lib game
                 :version version
@@ -74,22 +75,6 @@
 (defn release [& _]
   (minusthree-uber {}))
 
-(defn jpackage [& _]
-  ;; jpackage makes an installer that is unintuitive atm
-  (let [home "target/output/jar"
-        jar  (first
-              (eduction
-               (filter #(str/ends-with? (.getName %) ".jar"))
-               (file-seq (io/file home))))
-        cmds ["jpackage"
-              "--input" home
-              "--name" "HorsingAround"
-              "--main-jar" (.getName jar)
-              "--description" "a game submission for Mini Jam 205: Horses"
-              "--java-options" "--enable-native-access=ALL-UNNAMED"]]
-    (println "running" cmds)
-    (b/process {:out :inherit :command-args cmds})))
-
 (defn find-jar []
   (let [home "target/output/jar"]
     (first (filter #(str/ends-with? (.getName %) ".jar")
@@ -97,8 +82,7 @@
 
 (def java-modules
   ["java.base"
-   "java.xml"
-   "java.sql"])
+   "java.xml"])
 
 (defn jlink [& _]
   (let [jre  "target/runtime"
@@ -115,7 +99,6 @@
     (b/process {:out :inherit :command-args jtry})))
 
 (defn packr [& _]
-  (b/delete {:path "target/output/packr"})
   (let [pack "target/output/packr"
         jre  "target/runtime"
         game "HorsingAround"
@@ -126,6 +109,7 @@
               "--classpath" (.getAbsolutePath (find-jar))
               "--mainclass" "minusthree.platform.jvm.jvm_game"
               "--output" pack]]
+    (b/delete {:path pack})
     (println "running" cmds)
     (b/process {:out :inherit :command-args cmds})
     (b/zip {:src-dirs [pack] :zip-file (str "target/output/" game "-win.zip")})))
