@@ -11,8 +11,6 @@
 
 (defn -main [& _]
   ;; config needs hammock
-  (let [config {:window-conf {:w 540 :h 540 :x 100 :y 100 :floating? false}
-                :imgui       {:title "Hello Miku from Clojure!"
-                              :text  "looking cute as usual!"}}
+  (let [config {:window-conf {:w 540 :h 540 :x 100 :y 100 :floating? false}}
         window (#'create-window (:window-conf config))]
     (#'start window config)))

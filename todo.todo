@@ -9,4 +9,4 @@ horsing around:
     ✘ scoring @cancelled(26-03-01 21:46)
     ✘ simple control A D @cancelled(26-03-01 21:46)
     ✘ button ui @cancelled(26-03-01 21:46)
-    ☐ don't include nrepl on release
+    ✔ don't include nrepl on release @done(26-03-06 21:32) oops wrong cause

@@ -88,7 +88,8 @@
           ::stopping   ::ending)))
     (finally
       (clean-up)
-      (the-game-ends))))
+      (the-game-ends)
+      (shutdown-agents))))
 
 (defn init [{:keys [::world/this] :as game}]
   (->> (or this (world/init-world game systems/all))
