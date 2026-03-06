@@ -4,13 +4,14 @@
    [clojure.tools.build.api :as b]
    [clojure.java.io :as io]))
 
-(def game 'self.chera/horsing-around)
+(def game-coord 'self.chera/horsing-around)
+(def game "HorsingAround")
 (def version (format "0.2.%s" (b/git-count-revs nil)))
 (def target-dir "target")
 (def class-dir (str target-dir "/input/classes"))
 (def dist-dir (str target-dir "/output"))
 (def rel-dir (str dist-dir "/rel"))
-(def base-uber-file (format "%s/jar/%s-%s.jar" dist-dir (name game) version))
+(def base-uber-file (format "%s/jar/%s-%s.jar" dist-dir (name game-coord) version))
 
 (defn os []
   (let [os-name (str/lower-case (System/getProperty "os.name"))]
@@ -57,7 +58,7 @@
          basis (basis-by-os)}}]
   (b/delete {:path "target/output/jar"})
   (println "making an uberjar...")
-  (b/write-pom {:lib game
+  (b/write-pom {:lib game-coord
                 :version version
                 :basis @basis
                 :src-dirs ["src"]
@@ -72,13 +73,25 @@
   (println "uberjar created at" uber-file)
   (println (str "run with `java -jar " uber-file "`")))
 
-(defn release [& _]
+(defn uberjar [& _]
   (minusthree-uber {}))
 
 (defn find-jar []
   (let [home "target/output/jar"]
     (first (filter #(str/ends-with? (.getName %) ".jar")
                    (file-seq (io/file home))))))
+
+(defn play-jar [& _]
+  (let [jre      "target/runtime"
+        java     (str jre "/bin/java.exe")
+        play-cmd [java "-jar" (.getAbsolutePath (find-jar))]]
+    (println "Let's play the game! cmd:" play-cmd)
+    (b/process {:out :inherit :command-args play-cmd})))
+
+(defn play [& _]
+  (let [game-exe (str "target/output/packr/" game ".exe")]
+    (println "Let's play the game! cmd:" game-exe)
+    (b/process {:out :inherit :command-args [game-exe]})))
 
 (def java-modules
   ["java.base"])
@@ -100,7 +113,6 @@
 (defn packr [& _]
   (let [pack "target/output/packr"
         jre  "target/runtime"
-        game "HorsingAround"
         cmds ["java" "-jar" "packr-all-4.0.0.jar"
               "--platform" "windows64"
               "--jdk" jre
@@ -112,3 +124,7 @@
     (println "running" cmds)
     (b/process {:out :inherit :command-args cmds})
     (b/zip {:src-dirs [pack] :zip-file (str "target/output/" game "-win.zip")})))
+
+(defn release [& _]
+  (uberjar)
+  (packr))

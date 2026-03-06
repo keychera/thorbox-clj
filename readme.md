@@ -11,26 +11,19 @@ this project was named thorbox because I originally planned to use thorvg and bo
 ## repl dev
 
 need jdk25, clojure
-```
+```sh
 clojure -T:lets repl
+```
+
+# make small runtime
+
+```sh
+clojure -T:lets jlink
 ```
 
 ## release
 
-```
+```sh 
 clojure -T:lets release
-clojure -T:lets jlink
-clojure -T:lets packr
+clojure -T:lets play
 ```
-
-## native libs (unused)
-
-need babashka, local box2d at `../box2d` , thorvg at `../thorvg`, and their respective build tools
-
-this will build local box2d and thorvg shared libs and put it inside `resources/public/libs`
-
-```
-bb -x bb/prep
-```
-
-# jlink
