@@ -13,16 +13,19 @@
            org.lwjgl/lwjgl-sdl             {:mvn/version "3.4.1"}
            org.lwjgl/lwjgl-opengl          {:mvn/version "3.4.1"}
            org.lwjgl/lwjgl-stb             {:mvn/version "3.4.1"}}
- :aliases {:jvm-game {:jvm-opts ["-Dorg.lwjgl.util.Debug=true"
-                                 "-Dorg.lwjgl.util.DebugLoader=true"
-                                 "--enable-native-access=ALL-UNNAMED"]}
-           :lets     {:deps       {io.github.clojure/tools.build {:git/tag "v0.10.10"
-                                                                  :git/sha "deedd62"}}
-                      :ns-default equipment.lets}
-           :repl     {:extra-paths ["src-dev-jvm"]
+ :game {:game-name "HorsingAround"
+        :game-coord 'self.chera/horsing-around
+        :java-modules ["java.base"]}
+ :aliases {:dev-env  {:jvm-opts ["-Dorg.lwjgl.util.Debug=true"
+                                 "-Dorg.lwjgl.util.DebugLoader=true"]
+                      :extra-paths ["src-dev-jvm"]
                       :extra-deps  {cider/cider-nrepl                      {:mvn/version "0.57.0"}
                                     com.phronemophobic/viscous             {:mvn/version "1.3.5"}
                                     com.clojure-goes-fast/clj-memory-meter {:mvn/version "0.4.0"}}}
+           :game-env {:jvm-opts ["--enable-native-access=ALL-UNNAMED"]}
+           :lets     {:deps       {io.github.clojure/tools.build {:git/tag "v0.10.10"
+                                                                  :git/sha "deedd62"}}
+                      :ns-default equipment.lets}
            :windows  {:extra-deps {org.lwjgl/lwjgl$natives-windows        {:mvn/version "3.4.1"}
                                    org.lwjgl/lwjgl-sdl$natives-windows    {:mvn/version "3.4.1"}
                                    org.lwjgl/lwjgl-opengl$natives-windows {:mvn/version "3.4.1"}
@@ -30,5 +33,4 @@
            :linux    {:extra-deps {org.lwjgl/lwjgl$natives-linux        {:mvn/version "3.4.1"}
                                    org.lwjgl/lwjgl-sdl$natives-linux    {:mvn/version "3.4.1"}
                                    org.lwjgl/lwjgl-opengl$natives-linux {:mvn/version "3.4.1"}
-                                   org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.4.1"}}}
-           :release  {:jvm-opts ["--enable-native-access=ALL-UNNAMED"]}}}
+                                   org.lwjgl/lwjgl-stb$natives-linux    {:mvn/version "3.4.1"}}}}}

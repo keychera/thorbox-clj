@@ -13,10 +13,13 @@ need jdk25, clojure
 clojure -T:lets repl
 ```
 
-# make small runtime
+## make small runtime
 
 ```sh
+clojure -T:lets uberjar
 clojure -T:lets jlink
+# or
+clojure -T:lets play-jar
 ```
 
 ## release
